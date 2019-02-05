@@ -401,7 +401,7 @@ windows_template = """
         local solution=$1
         local config=$2
         local platform=$3
-        local proj=$4
+        local proj="${4:-}"
 
         if [ -z "$proj" ] ; then
             msbuild.exe "$(cygpath -m "$solution")" /p:Configuration="$config" /p:Platform="$platform" /m
