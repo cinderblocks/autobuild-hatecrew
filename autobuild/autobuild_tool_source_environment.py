@@ -380,19 +380,33 @@ and remove the set_build_variables command. All the same variables will be set."
             fi
         fi
     }
+
+    fix_pkgconfig_prefix() {
+        local path=$1
+        sed -i -e "s|\${AUTOBUILD_PACKAGES_DIR}$|$path|" $(find $path -name '*.pc')
+    }
 """
 
 windows_template = """
 
+    build_vcproj() {
+        local vcproj=$1
+        local config=$2
+        local platform=$3
+
+        msbuild.exe "$(cygpath -m "$vcproj")" /p:Configuration="$config" /p:Platform="$platform" /m
+    }
+
     build_sln() {
         local solution=$1
         local config=$2
-        local proj="${3:-}"
+        local platform=$3
+        local proj=$4
 
-        if (($USE_INCREDIBUILD)) ; then
-            BuildConsole "$solution" ${proj:+/PRJ="$proj"} /CFG="$config"
+        if [ -z "$proj" ] ; then
+            msbuild.exe "$(cygpath -m "$solution")" /p:Configuration="$config" /p:Platform="$platform" /m
         else
-            devenv.com "$(cygpath -w "$solution")" /build "$config" ${proj:+/project "$proj"}
+            msbuild.exe "$(cygpath -m "$solution")" /t:"$proj" /p:Configuration="$config" /p:Platform="$platform" /m
         fi
     }
 
