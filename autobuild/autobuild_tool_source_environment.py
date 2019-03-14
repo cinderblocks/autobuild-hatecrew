@@ -742,7 +742,7 @@ def internal_source_environment(configurations, varsfile):
                     '120': "Visual Studio 12 2013",
                     '140': "Visual Studio 14 2015",
                     '150': "Visual Studio 15 2017",
-					'160': "Visual Studio 16 2019",
+                    '160': "Visual Studio 16 2019",
                     }[vsver]
             except KeyError:
                 # We don't have a specific mapping for this value of vsver. Take
