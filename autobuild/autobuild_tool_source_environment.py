@@ -141,6 +141,12 @@ def load_vsvars(vsver):
     # Did VS 2015 still adhere to the VS140COMNTOOLS convention? Adjust the
     # comparison here as necessary.
     if int(vsver) >= 150:
+        VS_VER_UPPER_VER = {
+            '120': "13.0",
+            '140': "15.0",
+            '150': "16.0",
+            '160': "17.0",
+            }[vsver]
         # We can't use the VSxxxCOMNTOOLS dodge as we always used to. Use
         # vswhere.exe instead.
         via = os.path.basename(_VSWHERE_PATH)
@@ -148,7 +154,7 @@ def load_vsvars(vsver):
         version = '.'.join((vsver[:-1], vsver[-1:]))
         try:
             where = subprocess.check_output(
-                [_VSWHERE_PATH, '-version', version, '-products', '*',
+                [_VSWHERE_PATH, '-version', '[%s,%s)' % (version, VS_VER_UPPER_VER), '-products', '*',
                  '-requires', 'Microsoft.Component.MSBuild',
                  '-property', 'InstallationPath']).rstrip()
         except OSError as err:
@@ -709,8 +715,15 @@ def internal_source_environment(configurations, varsfile):
             '32': 'Win32',
             '64': 'x64',
             }[os.environ["AUTOBUILD_ADDRSIZE"]]
+			
+        exports["AUTOBUILD_WIN_VSHOST"] = {
+            '32': 'x86',
+            '64': 'x64',
+            }[os.environ["AUTOBUILD_ADDRSIZE"]]
 
         if vsver:
+            exports["AUTOBUILD_WIN_VSVER"] = vsver		
+
             # When one of our build-cmd.sh scripts invokes CMake on Windows, it's
             # probably prudent to use a -G switch for the specific Visual Studio
             # version we want to target. It's not that uncommon for a Windows
@@ -726,9 +739,10 @@ def internal_source_environment(configurations, varsfile):
             # it should be central. It should be here.
             try:
                 AUTOBUILD_WIN_CMAKE_GEN = {
-                    '120': "Visual Studio 12",
-                    '140': "Visual Studio 14",
-                    '150': "Visual Studio 15",
+                    '120': "Visual Studio 12 2013",
+                    '140': "Visual Studio 14 2015",
+                    '150': "Visual Studio 15 2017",
+					'160': "Visual Studio 16 2019",
                     }[vsver]
             except KeyError:
                 # We don't have a specific mapping for this value of vsver. Take
@@ -738,9 +752,6 @@ def internal_source_environment(configurations, varsfile):
                 # error here. Plus this way, we defer the error until we hit a
                 # build that actually consumes AUTOBUILD_WIN_CMAKE_GEN.
                 AUTOBUILD_WIN_CMAKE_GEN = "Visual Studio %s" % (vsver[:-1])
-            # Of course CMake also needs to know bit width :-P
-            if os.environ["AUTOBUILD_ADDRSIZE"] == "64":
-                AUTOBUILD_WIN_CMAKE_GEN += " Win64"
             exports["AUTOBUILD_WIN_CMAKE_GEN"] = AUTOBUILD_WIN_CMAKE_GEN
 
             # load vsvars32.bat variables
