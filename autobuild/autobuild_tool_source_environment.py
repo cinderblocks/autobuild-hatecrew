@@ -152,7 +152,7 @@ def load_vsvars(vsver):
         version = '.'.join((vsver[:-1], vsver[-1:]))
         try:
             where = subprocess.check_output(
-                [_VSWHERE_PATH, '-version', '[%s,%s)' % (version, VS_VER_UPPER_VER), '-products', '*',
+                [_VSWHERE_PATH, '-version', '[%s,%s)' % (version, vs_ver_nextver), '-products', '*',
                  '-requires', 'Microsoft.Component.MSBuild',
                  '-property', 'InstallationPath']).rstrip()
         except OSError as err:
