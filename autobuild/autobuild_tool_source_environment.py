@@ -141,12 +141,10 @@ def load_vsvars(vsver):
     # Did VS 2015 still adhere to the VS140COMNTOOLS convention? Adjust the
     # comparison here as necessary.
     if int(vsver) >= 150:
-        VS_VER_UPPER_VER = {
-            '120': "13.0",
-            '140': "15.0",
-            '150': "16.0",
-            '160': "17.0",
-            }[vsver]
+        if int(vsver) >= 160:
+            vs_ver_nextver = "17.0"
+        else:
+            vs_ver_nextver = "16.0"
         # We can't use the VSxxxCOMNTOOLS dodge as we always used to. Use
         # vswhere.exe instead.
         via = os.path.basename(_VSWHERE_PATH)
