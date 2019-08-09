@@ -916,7 +916,8 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             nargs='?',
                             action="append",
                             dest='configurations',
-                            help="install packages for a specific build configuration\n(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
+                            help="install packages for a specific build configuration\n"
+                                 "(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
 
@@ -926,6 +927,16 @@ class AutobuildTool(autobuild_base.AutobuildBase):
 
         platform=common.get_current_platform()
         logger.debug("installing platform "+platform)
+
+        auth_user = os.environ.get("AUTOBUILD_HTTP_USER")
+        auth_pass = os.environ.get("AUTOBUILD_HTTP_PASS")
+        if auth_user is not None and auth_pass is not None:
+            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passman.add_password(realm='RESTRICTED ACCESS', uri='https://pkg.alchemyviewer.org',
+                                 user=auth_user, passwd=auth_pass)
+            auth_handler = urllib2.HTTPBasicAuthHandler(passman)
+            opener = urllib2.build_opener(auth_handler)
+            urllib2.install_opener(opener)
 
         # load the list of packages to install
         logger.debug("loading " + args.install_filename)
