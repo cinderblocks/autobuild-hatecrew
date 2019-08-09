@@ -40,8 +40,7 @@ import pprint
 import logging
 import tarfile
 import zipfile
-import requests
-from requests.auth import HTTPDigestAuth
+import urllib2
 import subprocess
 import socket
 import itertools
@@ -241,15 +240,9 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
             # Attempt to download the remote file
             logger.info("downloading %s:\n  %s\n     to %s" % (package_name, package_url, cache_file))
             try:
-                session = requests.Session()
-                if 'https://pkg.alchemyviewer.org' in package_url and 'AUTOBUILD_HTTP_USER' in os.environ and 'AUTOBUILD_HTTP_PASS' in os.environ:
-                    http_user = os.environ.get('AUTOBUILD_HTTP_USER')
-                    http_pass = os.environ.get('AUTOBUILD_HTTP_PASS')
-                    session.auth = (http_user, http_pass)
-                package_response = session.get(package_url, timeout=download_timeout_seconds, stream=True)
-                package_response.raise_for_status() # throws exception for any non-success
-            except requests.exceptions.RequestException as err:
-                logger.error("error: %s" % err)
+                package_response = urllib2.urlopen(package_url, None, download_timeout_seconds)
+            except urllib2.URLError as err:
+                logger.error("error: %s\n  downloading package %s" % (err, package_url))
                 package_response = None
                 cache_file = None
 
@@ -260,18 +253,21 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
                     package_blocks = package_size / max_block_size if package_size else 0
                     if package_blocks < (package_size * max_block_size):
                         package_blocks += 1 
+                    logger.debug("response size %d blocks %d" % (package_size, package_blocks))
                     blocks_recvd = 0
-                    for block in package_response.iter_content(max_block_size):
+                    block = package_response.read(max_block_size)
+                    while block:
                         blocks_recvd += 1
                         if logger.getEffectiveLevel() <= logging.INFO:
                             # use CR and trailing comma to rewrite the same line each time for progress
                             if package_blocks:
-                                print "%dMB / %dMB (%d%%)\r" % (blocks_recvd, package_blocks, int(100*blocks_recvd/package_blocks)),
+                                print "%d MB / %d MB (%d%%)\r" % (blocks_recvd, package_blocks, int(100*blocks_recvd/package_blocks)),
                                 sys.stdout.flush()
                             else:
                                 print "%d\r" % blocks_recvd,
                                 sys.stdout.flush()
                         cache.write(block)
+                        block = package_response.read(max_block_size)
                 if logger.getEffectiveLevel() <= logging.INFO:
                     print "" # get a new line following progress message
                     sys.stdout.flush()
