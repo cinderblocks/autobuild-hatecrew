@@ -216,6 +216,17 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
     Validate the cache file using the hash (removing it if needed)
     Returns None if there was a problem downloading the file.
     """
+
+    auth_user = os.environ.get("AUTOBUILD_HTTP_USER")
+    auth_pass = os.environ.get("AUTOBUILD_HTTP_PASS")
+    if auth_user is not None and auth_pass is not None:
+        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passman.add_password(realm=None, uri='https://pkg.alchemyviewer.org/',
+                             user=auth_user, passwd=auth_pass)
+        auth_handler = urllib2.HTTPBasicAuthHandler(passman)
+        opener = urllib2.build_opener(auth_handler)
+        urllib2.install_opener(opener)
+
     cache_file = None
     download_retries = 3
     while cache_file is None and download_retries > 0:
@@ -927,16 +938,6 @@ class AutobuildTool(autobuild_base.AutobuildBase):
 
         platform=common.get_current_platform()
         logger.debug("installing platform "+platform)
-
-        auth_user = os.environ.get("AUTOBUILD_HTTP_USER")
-        auth_pass = os.environ.get("AUTOBUILD_HTTP_PASS")
-        if auth_user is not None and auth_pass is not None:
-            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passman.add_password(realm=None, uri='https://pkg.alchemyviewer.org',
-                                 user=auth_user, passwd=auth_pass)
-            auth_handler = urllib2.HTTPBasicAuthHandler(passman)
-            opener = urllib2.build_opener(auth_handler)
-            urllib2.install_opener(opener)
 
         # load the list of packages to install
         logger.debug("loading " + args.install_filename)
