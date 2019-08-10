@@ -187,7 +187,7 @@ def handle_query_args(options, config_file, installed_file):
     if options.query_installed_file:
         print_package_for(options.query_installed_file, installed_file)
         return True
-    
+
     return False
 
 def print_package_for(target_file, installed_file):
@@ -196,7 +196,7 @@ def print_package_for(target_file, installed_file):
         if 'manifest' in package and target_file in package['manifest']:
             found_package = package
             break
-            
+
     if found_package:
         print "file '%s' installed by package '%s'" \
         % (target_file, package['package_description']['name'])
@@ -236,7 +236,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
         else:
             # download timeout so a download doesn't hang
             download_timeout_seconds = 120
-            
+
             # Attempt to download the remote file
             logger.info("downloading %s:\n  %s\n     to %s" % (package_name, package_url, cache_file))
             try:
@@ -252,7 +252,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
                     package_size = int(package_response.headers.get("content-length", 0))
                     package_blocks = package_size / max_block_size if package_size else 0
                     if package_blocks < (package_size * max_block_size):
-                        package_blocks += 1 
+                        package_blocks += 1
                     logger.debug("response size %d blocks %d" % (package_size, package_blocks))
                     blocks_recvd = 0
                     block = package_response.read(max_block_size)
@@ -342,7 +342,7 @@ def __extract_tar_file(cachename, install_dir, exclude=[]):
     # Attempt to extract the package from the install cache
     tar = tarfile.open(cachename, 'r')
     extract = [member for member in tar.getmembers() if member.name not in exclude]
-    conflicts = [member.name for member in extract 
+    conflicts = [member.name for member in extract
                  if os.path.exists(os.path.join(install_dir, member.name))
                  and not os.path.isdir(os.path.join(install_dir, member.name))]
     if conflicts:
@@ -354,7 +354,7 @@ def __extract_tar_file(cachename, install_dir, exclude=[]):
 def __extract_zip_archive(cachename, install_dir, exclude=[]):
     zip_archive = zipfile.ZipFile(cachename, 'r')
     extract = [member for member in zip_archive.namelist() if member not in exclude]
-    conflicts = [member for member in extract 
+    conflicts = [member for member in extract
                  if os.path.exists(os.path.join(install_dir, member))
                  and not os.path.isdir(os.path.join(install_dir, member))]
     if conflicts:
@@ -380,7 +380,7 @@ def do_install(packages, config_file, installed, platform, install_dir, dry_run,
             raise InstallError('unknown package: %s' % pname)
 
         logger.info("checking %s" % pname)
-        
+
         # Existing tarball install, or new package install of either kind
         if pname in local_archives:
             if _install_local(pname, platform, package, local_archives[pname], install_dir, installed, dry_run):
@@ -441,7 +441,7 @@ def _install_binary(configured_name, platform, package, config_file, install_dir
   To allow new installation, run 
   autobuild uninstall %s""" % (package_name, installed_pkg['archive']['url'], package_name))
         return False
-    
+
     # get the package file in the cache, downloading if needed, and verify the hash
     # (raises InstallError on failure, so no check is needed)
     cachefile = get_package_file(package_name, archive.url, hash_algorithm=(archive.hash_algorithm or 'md5'), expected_hash=archive.hash)
@@ -458,7 +458,7 @@ def _install_binary(configured_name, platform, package, config_file, install_dir
         if installed_platform.archive is None:
             installed_platform.archive = configfile.ArchiveDescription()
         metadata.install_type = 'package'
-        _update_installed_package_files(metadata, package, 
+        _update_installed_package_files(metadata, package,
                                         platform=platform, installed=installed,
                                         install_dir=install_dir, files=files)
         return True
@@ -554,7 +554,7 @@ def _install_common(configured_name, platform, package, package_file, install_di
 Conflict: %s
   If you have updated the configuration for any of the conflicting packages,
   try uninstalling those packages and rerunning.""" % \
-  (package.name, 
+  (package.name,
    metadata.configuration,
    metadata.package_description.version,
    metadata.build_id,
@@ -599,7 +599,7 @@ Conflict: %s
               ):
         clean_files(install_dir, files) # clean up any partial install
         raise InstallError("nonexistent license_file for %s: %s" % (package.name, license_file))
-    
+
     return metadata, files
 
 TransitiveSearched = set()
@@ -607,7 +607,7 @@ TransitiveSearched = set()
 def transitive_search(new_package, installed):
     TransitiveSearched.clear()
     return transitive_dependency_conflicts(new_package, installed)
-    
+
 def transitive_dependency_conflicts(new_package, installed):
     """
     Searches for new_package and each of its dependencies in the installed tree
@@ -677,7 +677,7 @@ def package_in_installed(new_package, installed):
                       ( previous[used]['package_description']['name'],
                         previous[used]['package_description']['version'],
                         previous[used]['build_id'])
-                        
+
             if conflict:
                 # in order to be able to add the import path, we only detect the first conflict
                 return conflict
@@ -784,7 +784,7 @@ def install_packages(args, config_file, install_dir, platform, packages):
         else:
             logger.debug("no package names specified; installing all packages")
             packages = config_file.installables.keys()
-        
+
     # examine any local archives to match then with package names.
     local_archives = []
     for archive_path in args.local_archives:
@@ -932,7 +932,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         auth_pass = os.environ.get("AUTOBUILD_HTTP_PASS")
         if auth_user is not None and auth_pass is not None:
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passman.add_password(realm='RESTRICTED ACCESS', uri='https://pkg.alchemyviewer.org',
+            passman.add_password(realm=None, uri='https://pkg.alchemyviewer.org',
                                  user=auth_user, passwd=auth_pass)
             auth_handler = urllib2.HTTPBasicAuthHandler(passman)
             opener = urllib2.build_opener(auth_handler)
