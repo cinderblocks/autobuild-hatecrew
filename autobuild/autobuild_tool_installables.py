@@ -141,8 +141,8 @@ def _get_new_metadata(config, args_name, args_archive, arguments):
             metadata.archive.url = archive_url
             if 'hash' not in key_values:
                 logger.warning("No hash specified, computing from %s" % archive_file)
-                metadata.archive['hash'] = common.compute_md5(archive_file)
-                metadata.archive['hash_algorithm'] = 'md5'
+                metadata.archive['hash'] = common.compute_sha256(archive_file)
+                metadata.archive['hash_algorithm'] = 'sha256'
 
     if archive_file is None:
         logger.warning("Archive not downloaded; some integrity checks may not work")

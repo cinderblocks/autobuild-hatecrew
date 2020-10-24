@@ -260,7 +260,7 @@ class Archive(InteractiveCommand):
     ARGUMENTS = ['format', 'hash_algorithm', 'platform']
 
     ARG_DICT = {'format':         {'help': 'Archive format (e.g zip or tbz2)'},
-                'hash_algorithm': {'help': 'The algorithm for computing the archive hash (e.g. md5)'},
+                'hash_algorithm': {'help': 'The algorithm for computing the archive hash (e.g. md5, sha256)'},
                 'platform':       {'help': 'The name of the platform archive to be configured'}
                 }
 

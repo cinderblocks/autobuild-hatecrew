@@ -68,11 +68,11 @@ directory to specify all the files that have been installed.
 Downloaded package archives are cached on the local machine so that
 they can be shared across multiple repositories and to avoid unnecessary
 downloads. A new package will be downloaded if the autobuild.xml files is
-updated with a new package URL or MD5 sum.
+updated with a new package URL or checksum.
 
-If an MD5 checksum is provided for a package in the autobuild.xml file,
+If a checksum is provided for a package in the autobuild.xml file,
 this will be used to validate the downloaded package. The package will
-not be installed if the MD5 sum does not match.
+not be installed if the checksum does not match.
 
 If no packages are specified on the command line, then the defaut
 behavior is to install all known archives appropriate for the platform

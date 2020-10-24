@@ -349,10 +349,7 @@ def compute_md5(path):
     """
     Returns the MD5 sum for the given file.
     """
-    try:
-        from hashlib import md5      # Python 2.6
-    except ImportError:
-        from md5 import new as md5   # Python 2.5 and earlier
+    from hashlib import md5      # Python 2.6
 
     try:
         stream = open(path, 'rb')
@@ -361,6 +358,25 @@ def compute_md5(path):
 
     try:
         hasher = md5(stream.read())
+    finally:
+        stream.close()
+
+    return hasher.hexdigest()
+
+
+def compute_sha256(path):
+    """
+    Returns the SHA256 sum for the given file.
+    """
+    from hashlib import sha256      # Python 2.6
+
+    try:
+        stream = open(path, 'rb')
+    except IOError as err:
+        raise AutobuildError("Can't compute SHA256 for %s: %s" % (path, err))
+
+    try:
+        hasher = sha256(stream.read())
     finally:
         stream.close()
 
