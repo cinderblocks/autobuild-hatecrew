@@ -217,15 +217,21 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
     Returns None if there was a problem downloading the file.
     """
 
-    auth_user = os.environ.get("AUTOBUILD_HTTP_USER")
-    auth_pass = os.environ.get("AUTOBUILD_HTTP_PASS")
-    if auth_user is not None and auth_pass is not None:
-        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passman.add_password(realm=None, uri='https://pkg.alchemyviewer.org/',
-                             user=auth_user, passwd=auth_pass)
-        auth_handler = urllib2.HTTPBasicAuthHandler(passman)
-        opener = urllib2.build_opener(auth_handler)
-        urllib2.install_opener(opener)
+    if "pkg.alchemyviewer.org" in package_url:
+        auth_user = os.environ.get("AUTOBUILD_HTTP_USER")
+        auth_pass = os.environ.get("AUTOBUILD_HTTP_PASS")
+        if auth_user is not None and auth_pass is not None:
+            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passman.add_password(realm=None, uri='https://pkg.alchemyviewer.org/',
+                                user=auth_user, passwd=auth_pass)
+            auth_handler = urllib2.HTTPBasicAuthHandler(passman)
+            opener = urllib2.build_opener(auth_handler)
+            urllib2.install_opener(opener)
+
+    headers = {}
+    if "git.alchemyviewer.org" in package_url:
+        apikey = os.environ.get("AUTOBUILD_AUTH_TOKEN", "TGwG9X6TTRDppYyENQUu")
+        headers['PRIVATE-TOKEN'] = apikey
 
     cache_file = None
     download_retries = 3
@@ -251,7 +257,8 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
             # Attempt to download the remote file
             logger.info("downloading %s:\n  %s\n     to %s" % (package_name, package_url, cache_file))
             try:
-                package_response = urllib2.urlopen(package_url, None, download_timeout_seconds)
+                req = urllib2.Request(package_url, None, headers)
+                package_response = urllib2.urlopen(url=req, timeout=download_timeout_seconds)
             except urllib2.URLError as err:
                 logger.error("error: %s\n  downloading package %s" % (err, package_url))
                 package_response = None
