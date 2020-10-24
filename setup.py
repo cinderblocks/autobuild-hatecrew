@@ -77,6 +77,7 @@ setup(
     # install_requires: it's bundled with Python 2.7+.
     install_requires=['llbase', 'pydot', ] + \
                      (['backports.lzma'] if sys.version_info[:2] < (3, 3) else []) + \
+                     (['pysha3'] if sys.version_info[:2] < (3, 6) else []) + \
                      (['argparse'] if sys.version_info[:2] < (2, 7) else []),
     #ext_modules=ext_modules,
     )

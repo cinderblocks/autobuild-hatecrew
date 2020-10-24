@@ -424,12 +424,16 @@ def _add_file_to_zip_archive(zip_file, unnormalized_file, archive_filename, adde
 def _print_hash(filename, results, results_dict):
     md5 = common.compute_md5(filename)
     sha256 = common.compute_sha256(filename)
+    sha3_256 = common.compute_sha3_256(filename)
+    sha3_384 = common.compute_sha3_384(filename)
 
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
     print "md5    %s" % md5
     print "sha256    %s" % sha256
+    print "sha3_256    %s" % sha3_256
+    print "sha3_384    %s" % sha3_384
     if results:
         results_dict["autobuild_package_md5"] = md5
         results_dict["autobuild_package_sha256"] = sha256

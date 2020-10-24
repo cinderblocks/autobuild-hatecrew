@@ -95,3 +95,11 @@ def _verify_md5(pathname, hash):
 @hash_algorithm("sha256")
 def _verify_sha256(pathname, hash):
     return common.compute_sha256(pathname) == hash
+
+@hash_algorithm("sha3_256")
+def _verify_sha256(pathname, hash):
+    return common.compute_sha3_256(pathname) == hash
+
+@hash_algorithm("sha3_384")
+def _verify_sha256(pathname, hash):
+    return common.compute_sha3_384(pathname) == hash
