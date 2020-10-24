@@ -45,6 +45,7 @@ following metadata in the autobuild.xml file:
 
 import hashlib
 import os
+import json
 import tarfile
 import getpass
 import glob
@@ -224,15 +225,18 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     print "packing %s" % package_description.name
 
     results = None
+    results_dict = None
     if not dry_run:
         if results_file:
             try:
                 results=open(results_file,'wb')
             except IOError as err:
                 raise PackageError("Unable to open results file %s:\n%s" % (results_file, err))
-            results.write('autobuild_package_name="%s"\n' % package_description.name)
-            results.write('autobuild_package_clean="%s"\n' % ("false" if metadata_file.dirty else "true"))
-            results.write('autobuild_package_metadata="%s"\n' % metadata_file_path)
+            
+            results_dict = {"autobuild_package_name":package_description.name,
+                         "autobuild_package_version":getattr(metadata_file.package_description,'version',None),
+                         "autobuild_package_clean":("false" if metadata_file.dirty else "true"),
+                         "autobuild_package_metadata":metadata_file_path}
         metadata_file.save()
 
     # add the metadata file name to the list of files _after_ putting that list in the metadata
@@ -255,9 +259,9 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
         archive_description = platform_description.archive
         format = _determine_archive_format(archive_format, archive_description)
         if format == 'tbz2':
-            _create_tarfile(tarfilename + '.tar.bz2', build_directory, files, results)
+            _create_tarfile(tarfilename + '.tar.bz2', build_directory, files, results, results_dict)
         elif format == 'zip':
-            _create_zip_archive(tarfilename + '.zip', build_directory, files, results)
+            _create_zip_archive(tarfilename + '.zip', build_directory, files, results, results_dict)
         else:
             raise PackageError("archive format %s is not supported" % format)
     if not dry_run and results:
@@ -304,7 +308,7 @@ def _get_file_list(platform_description, build_directory):
             os.chdir(current_directory)
     return [files, missing]
 
-def _create_tarfile(tarfilename, build_directory, filelist, results):
+def _create_tarfile(tarfilename, build_directory, filelist, results, results_dict):
     if not os.path.exists(os.path.dirname(tarfilename)):
         os.makedirs(os.path.dirname(tarfilename))
     current_directory = os.getcwd()
@@ -335,11 +339,11 @@ def _create_tarfile(tarfilename, build_directory, filelist, results):
     # (they use the --results-file option instead)
     print "wrote  %s" % tarfilename
     if results:
-        results.write('autobuild_package_filename="%s"\n' % tarfilename)
-    _print_hash(tarfilename, results)
+        results_dict["autobuild_package_filename"] = os.path.basename(tarfilename)
+    _print_hash(tarfilename, results, results_dict)
 
 
-def _create_zip_archive(archive_filename, build_directory, file_list, results):
+def _create_zip_archive(archive_filename, build_directory, file_list, results, results_dict):
     if not os.path.exists(os.path.dirname(archive_filename)):
         os.makedirs(os.path.dirname(archive_filename))
     current_directory = os.getcwd()
@@ -358,7 +362,7 @@ def _create_zip_archive(archive_filename, build_directory, file_list, results):
     print "wrote  %s" % archive_filename
     if results:
         results.write('autobuild_package_filename="%s"\n' % archive_filename)
-    _print_hash(archive_filename, results)
+    _print_hash(archive_filename, results, results_dict)
 
 
 def _add_file_to_zip_archive(zip_file, unnormalized_file, archive_filename, added_files):
@@ -382,20 +386,19 @@ def _add_file_to_zip_archive(zip_file, unnormalized_file, archive_filename, adde
         logger.info('added ' + file)
 
 
-def _print_hash(filename, results):
-    fp = open(filename, 'rb')
-    m = hashlib.md5()
-    while True:
-        d = fp.read(65536)
-        if not d:
-            break
-        m.update(d)
+def _print_hash(filename, results, results_dict):
+    md5 = common.compute_md5(filename)
+    sha256 = common.compute_sha256(filename)
+
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print "md5    %s" % m.hexdigest()
+    print "md5    %s" % md5
+    print "sha256    %s" % sha256
     if results:
-        results.write('autobuild_package_md5="%s"\n' % m.hexdigest())
+        results_dict["autobuild_package_md5"] = md5
+        results_dict["autobuild_package_sha256"] = sha256
+        json.dump(results_dict,results)
 
     # Not using logging, since this output should be produced unconditionally on stdout
     # Downstream build tools utilize this output
