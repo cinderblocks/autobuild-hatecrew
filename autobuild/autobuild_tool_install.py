@@ -313,7 +313,7 @@ def _install_package(archive_path, install_dir, exclude=[]):
         return False
     logger.info("extracting from %s" % os.path.basename(archive_path))
     sys.stdout.flush() # so that the above will appear during uncompressing very large archives
-    if tarfile.is_tarfile(archive_path):
+    if ".tar.xz" in archive_path or ".tar.bz2" in archive_path or ".tar.gz" in archive_path:
         return __extract_tar_file(archive_path, install_dir, exclude=exclude)
     elif zipfile.is_zipfile(archive_path):
         return __extract_zip_archive(archive_path, install_dir, exclude=exclude)
@@ -330,9 +330,35 @@ def extract_metadata_from_package(archive_path, metadata_file_name):
     if not os.path.exists(archive_path):
         logger.error("no package found at: %s" % archive_path)
     else:
+        try:
+            from cStringIO import StringIO as BIO
+        except ImportError: # python 3
+            from io import BytesIO as BIO
+
         logger.debug("extracting metadata from %s" % os.path.basename(archive_path))
-        if tarfile.is_tarfile(archive_path):
-            tar = tarfile.open(archive_path, 'r')
+        if ".tar.xz" in archive_path or ".tar.bz2" in archive_path or ".tar.gz" in archive_path:
+            filedata = None
+            if ".tar.xz" in archive_path:
+                try:
+                    import lzma
+                except ImportError:
+                    from backports import lzma
+                with lzma.open(archive_path, "r") as f:
+                    filedata = f.read()
+                    f.close()
+            elif ".tar.bz2" in archive_path:
+                import bz2
+                with bz2.BZ2File(archive_path, "r") as f:
+                    filedata = f.read()
+                    f.close()
+            elif ".tar.gz" in archive_path:
+                import gzip
+                with gzip.open(archive_path, "r") as f:
+                    filedata = f.read()
+                    f.close()
+
+            file_in = BIO(filedata)
+            tar = tarfile.open(fileobj=file_in, mode='r')
             try:
                 metadata_file = tar.extractfile(metadata_file_name)
             except KeyError as err:
@@ -351,7 +377,33 @@ def extract_metadata_from_package(archive_path, metadata_file_name):
 
 def __extract_tar_file(cachename, install_dir, exclude=[]):
     # Attempt to extract the package from the install cache
-    tar = tarfile.open(cachename, 'r')
+    try:
+        from cStringIO import StringIO as BIO
+    except ImportError: # python 3
+        from io import BytesIO as BIO
+
+    filedata = None
+    if ".tar.xz" in cachename:
+        try:
+            import lzma
+        except ImportError:
+            from backports import lzma
+        with lzma.open(cachename, "r") as f:
+            filedata = f.read()
+            f.close()
+    elif ".tar.bz2" in cachename:
+        import bz2
+        with bz2.BZ2File(cachename, "r") as f:
+            filedata = f.read()
+            f.close()
+    elif ".tar.gz" in cachename:
+        import gzip
+        with gzip.open(cachename, "r") as f:
+            filedata = f.read()
+            f.close()
+    
+    file_in = BIO(filedata)
+    tar = tarfile.open(fileobj=file_in, mode='r')
     extract = [member for member in tar.getmembers() if member.name not in exclude]
     conflicts = [member.name for member in extract
                  if os.path.exists(os.path.join(install_dir, member.name))

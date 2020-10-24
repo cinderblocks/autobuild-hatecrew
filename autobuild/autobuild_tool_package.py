@@ -258,8 +258,8 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     else:
         archive_description = platform_description.archive
         format = _determine_archive_format(archive_format, archive_description)
-        if format == 'tbz2':
-            _create_tarfile(tarfilename + '.tar.bz2', build_directory, files, results, results_dict)
+        if format == 'txz' or format == 'tbz2' or format == 'tgz':
+            _create_tarfile(tarfilename, format, build_directory, files, results, results_dict)
         elif format == 'zip':
             _create_zip_archive(tarfilename + '.zip', build_directory, files, results, results_dict)
         else:
@@ -272,7 +272,7 @@ def _determine_archive_format(archive_format_argument, archive_description):
     if archive_format_argument is not None:
         return archive_format_argument
     elif archive_description is None or archive_description.format is None:
-        return 'tbz2'
+        return 'txz'
     else:
         return archive_description.format
 
@@ -308,13 +308,29 @@ def _get_file_list(platform_description, build_directory):
             os.chdir(current_directory)
     return [files, missing]
 
-def _create_tarfile(tarfilename, build_directory, filelist, results, results_dict):
+
+def _create_tarfile(tarfilename, format, build_directory, filelist, results, results_dict):
     if not os.path.exists(os.path.dirname(tarfilename)):
         os.makedirs(os.path.dirname(tarfilename))
     current_directory = os.getcwd()
     os.chdir(build_directory)
     try:
-        tfile = tarfile.open(tarfilename, 'w:bz2')
+        from cStringIO import StringIO as BIO
+    except ImportError: # python 3
+        from io import BytesIO as BIO
+
+    if format == 'txz':
+        tarfilename = tarfilename + '.tar.xz'
+    elif format == 'tbz2':
+        tarfilename = tarfilename + '.tar.bz2'
+    elif format == 'tgz':
+        tarfilename = tarfilename + '.tar.gz'
+    else:
+        raise PackageError("unknown tar archive format: %s" % format)
+
+    try:
+        file_out = BIO()
+        tfile = tarfile.open(fileobj = file_out, mode = 'w')
         for file in filelist:
             try:
                 # Make sure permissions are set on Windows.
@@ -332,6 +348,25 @@ def _create_tarfile(tarfilename, build_directory, filelist, results, results_dic
                 # Apparently you can get any of the above if the specified filename can't be opened
                 raise PackageError("unable to add %s to %s: %s" % (file, tarfilename, err))
         tfile.close()
+
+        if format == 'txz':
+            try:
+                import lzma
+            except ImportError:
+                from backports import lzma
+            with lzma.open(filename=tarfilename, mode="w", preset=9|lzma.PRESET_EXTREME) as f:
+                f.write(file_out.getvalue())
+                f.close()
+        elif format == 'tbz2':
+            import bz2
+            with bz2.open(tarfilename, "w") as f:
+                f.write(file_out.getvalue())
+                f.close()
+        elif format == 'tgz':
+            import gzip
+            with gzip.open(tarfilename, "w") as f:
+                f.write(file_out.getvalue())
+                f.close()
     finally:
         os.chdir(current_directory)
     # printing unconditionally on stdout for backward compatibility
