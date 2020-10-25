@@ -437,6 +437,8 @@ def _print_hash(filename, results, results_dict):
     if results:
         results_dict["autobuild_package_md5"] = md5
         results_dict["autobuild_package_sha256"] = sha256
+        results_dict["autobuild_package_sha3_256"] = sha3_256
+        results_dict["autobuild_package_sha3_384"] = sha3_384
         json.dump(results_dict,results)
 
     # Not using logging, since this output should be produced unconditionally on stdout
