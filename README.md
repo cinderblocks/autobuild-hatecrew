@@ -1,4 +1,3 @@
-
 Autobuild is a framework for building packages and for managing the
 dependencies of a package on other packages. It provides a common
 interface to configuring and building any package, but it is not a
@@ -7,16 +6,15 @@ make, cmake, or project files to configure and build your
 library. Autobuild will, however, allow you invoke these commands and
 package the product with a common interface.
 
-*Important: Linden Lab Autobuild is not the same as or derived from GNU Autobuild, but they are similar enough to cause confusion.*
+*Important: This Autobuild is not the same as or derived from GNU Autobuild, but they are similar enough to cause confusion.*
 
-For more information, see the [wiki page](https://wiki.secondlife.com/wiki/Autobuild)
+To install run
 
-This repository is under very active development, where the changes
-described on
-[this wiki page](https://wiki.secondlife.com/wiki/User:Oz_Linden/Autobuild_Improvements)
-are being made.
+pip install autobuild -i https://pkg.alchemyviewer.org/repository/autobuild/simple --extra-index-url https://pypi.org/simple
+
 
 Copyright (c) 2010, Linden Research, Inc.
+Copyright (c) 2020, Alchemy Development Group
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
