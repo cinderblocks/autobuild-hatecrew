@@ -10,7 +10,7 @@ package the product with a common interface.
 
 To install run
 
-pip install autobuild -i https://pkg.alchemyviewer.org/repository/autobuild/simple --extra-index-url https://pypi.org/simple
+`pip install autobuild -i https://pkg.alchemyviewer.org/repository/autobuild/simple --extra-index-url https://pypi.org/simple`
 
 
 Copyright (c) 2010, Linden Research, Inc.
