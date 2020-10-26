@@ -2,6 +2,7 @@ The MIT License (MIT)
 =====================
 
 Copyright © 2010, Linden Research, Inc.
+
 Copyright © 2020, Alchemy Development Group
 
 Permission is hereby granted, free of charge, to any person
