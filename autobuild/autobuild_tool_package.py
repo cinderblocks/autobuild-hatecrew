@@ -439,7 +439,7 @@ def _print_hash(filename, results, results_dict):
         results_dict["autobuild_package_sha256"] = sha256
         results_dict["autobuild_package_sha3_256"] = sha3_256
         results_dict["autobuild_package_sha3_384"] = sha3_384
-        json.dump(results_dict,results)
+        json.dump(obj=results_dict, fp=results, sort_keys=True, indent=4, separators=(',', ': '))
 
     # Not using logging, since this output should be produced unconditionally on stdout
     # Downstream build tools utilize this output
