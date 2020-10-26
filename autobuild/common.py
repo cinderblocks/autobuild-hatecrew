@@ -349,7 +349,7 @@ def compute_md5(path):
     """
     Returns the MD5 sum for the given file.
     """
-    from hashlib import md5      # Python 2.6
+    import hashlib
 
     try:
         stream = open(path, 'rb')
@@ -357,7 +357,7 @@ def compute_md5(path):
         raise AutobuildError("Can't compute MD5 for %s: %s" % (path, err))
 
     try:
-        hasher = md5(stream.read())
+        hasher = hashlib.md5(stream.read())
     finally:
         stream.close()
 
