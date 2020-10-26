@@ -856,7 +856,7 @@ def install_packages(args, config_file, install_dir, platform, packages):
             packages = config_file.installables.keys()
 
     # examine any local archives to match then with package names.
-    local_archives = []
+    local_archives = {}
     for archive_path in args.local_archives:
         logger.info("Checking local archive '%s'" % archive_path)
         local_metadata = get_metadata_from_package(archive_path)

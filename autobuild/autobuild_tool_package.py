@@ -90,7 +90,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         parser.add_argument('--archive-format',
                             default=None,
                             dest='archive_format',
-                            help='the format of the archive (tbz2 or zip)')
+                            help='the format of the archive (txz, tgz, tbz2 or zip)')
         parser.add_argument('--build-dir',
                             default=None,
                             dest='select_dir',  # see common.select_directories()
@@ -359,7 +359,7 @@ def _create_tarfile(tarfilename, format, build_directory, filelist, results, res
                 f.close()
         elif format == 'tbz2':
             import bz2
-            with bz2.open(tarfilename, "w") as f:
+            with bz2.BZ2File(tarfilename, "w") as f:
                 f.write(file_out.getvalue())
                 f.close()
         elif format == 'tgz':
