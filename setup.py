@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 #
 # $LicenseInfo:firstyear=2010&license=mit$
 # Copyright (c) 2010, Linden Research, Inc.
@@ -44,7 +44,7 @@ execfile(os.path.join("autobuild", "version.py"))
 # The previous execfile better have defined AUTOBUILD_VERSION_STRING!
 AUTOBUILD_VERSION_STRING                # NameError here means it didn't
 
-PACKAGE_NAME = 'autobuild'
+PACKAGE_NAME = 'transmute'
 LLAUTOBUILD_SOURCE = 'autobuild'
 CLASSIFIERS = """\
 Development Status :: 4 - Beta
@@ -57,28 +57,25 @@ Operating System :: Microsoft :: Windows
 Operating System :: Unix
 """
 
+import setuptools
+
 ext_modules = []
 
 setup(
     name=PACKAGE_NAME,
     version=AUTOBUILD_VERSION_STRING,
-    author='Oz Linden',
-    author_email='oz@lindenlab.com',
-    url="http://wiki.secondlife.com/wiki/Autobuild",
-    description='Linden Lab Automated Package Management and Build System',
+    author='Rye Mutt',
+    author_email='rye@alchemyviewer.org',
+    url="https://git.alchemyviewer.org/alchemy/autobuild",
+    description='Transmuted Automated Package Management and Build System',
     platforms=["any"],
     package_dir={PACKAGE_NAME:LLAUTOBUILD_SOURCE},
     packages=[PACKAGE_NAME],
-    entry_points=dict(console_scripts=['autobuild=autobuild.autobuild_main:main']),
+    entry_points=dict(console_scripts=['transmute=transmute.autobuild_main:main']),
     scripts=[],
     license='MIT',
     classifiers=filter(None, CLASSIFIERS.split("\n")),
-    # argparse is specifically for Python 2.6 compatibility. If/when we drop
-    # Python 2.6 support, the conditional argparse item can be removed from
-    # install_requires: it's bundled with Python 2.7+.
     install_requires=['llbase', 'pydot', ] + \
                      (['backports.lzma'] if sys.version_info[:2] < (3, 3) else []) + \
-                     (['pysha3'] if sys.version_info[:2] < (3, 6) else []) + \
-                     (['argparse'] if sys.version_info[:2] < (2, 7) else []),
-    #ext_modules=ext_modules,
+                     (['pysha3'] if sys.version_info[:2] < (3, 6) else []),
     )
