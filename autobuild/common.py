@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # $LicenseInfo:firstyear=2010&license=mit$
 # Copyright (c) 2010, Linden Research, Inc.
+# Copyright (c) 2020, Alchemy Development Group
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -284,7 +285,7 @@ def get_autobuild_executable_path():
         # the actual filename identified in sys.argv[0], we can re-invoke
         # autobuild by running the command 'autobuild' in that directory. That
         # should work for either autobuild.cmd or autobuild.exe.
-        path = os.path.join(os.path.dirname(sys.argv[0]), "autobuild")
+        path = os.path.join(os.path.dirname(sys.argv[0]), "transmute")
     return os.path.realpath(os.path.abspath(path))
 
 

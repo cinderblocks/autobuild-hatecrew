@@ -49,7 +49,7 @@ class BaseTest(unittest.TestCase):
         # to this module's location. Note that this is OUR bin directory and
         # OUR autobuild.cmd script -- not anything created by pip.
         self.autobuild_bin = os.path.abspath(os.path.join(self.this_dir, os.pardir, os.pardir,
-                                                          "bin", "autobuild"))
+                                                          "bin", "transmute"))
         if sys.platform.startswith("win"):
             self.autobuild_bin += ".cmd"
 
