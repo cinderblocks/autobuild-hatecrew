@@ -380,7 +380,7 @@ and remove the set_build_variables command. All the same variables will be set."
             if [ -L "$dylib" ]; then
                 dylib="$(readlink "$dylib")"
             fi
-            install_name_tool -id "@executable_path/../Resources/$dylib" "$dylib"
+            install_name_tool -id "@rpath/$dylib" "$dylib"
             if [ "$dylib" != "$dylink" ]; then
                 ln -svf "$dylib" "$dylink"
             fi
