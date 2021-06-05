@@ -29,9 +29,9 @@ import sys
 import tempfile
 import unittest
 from autobuild import autobuild_tool_source_environment as atse
-from basetest import *
+from .basetest import *
 from nose.tools import *
-from patch import patch
+from .patch import patch
 from pprint import pformat
 
 def assert_dict_has(d, key, value):
@@ -45,10 +45,10 @@ def assert_dict_has(d, key, value):
 def assert_dict_subset(d, s):
     # Windows insists on capitalizing environment variables, so prepare a copy
     # of d with all-caps keys.
-    dupper = dict((k.upper(), v) for k, v in d.iteritems())
+    dupper = dict((k.upper(), v) for k, v in d.items())
     missing = []
     mismatch = []
-    for key, value in s.iteritems():
+    for key, value in s.items():
         try:
             dval = dupper[key.upper()]
         except KeyError:
@@ -106,7 +106,7 @@ class TestSourceEnvironment(BaseTest):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-        for var, value in self.restores.iteritems():
+        for var, value in self.restores.items():
             os.environ[var] = value
         for var in self.removes:
             # an individual test might or might not set var
@@ -207,7 +207,7 @@ done
 '%s' -c 'import os, pprint
 pprint.pprint(os.environ)'""" % self.shell_path(sys.executable)))
         # filter out anything inherited from our own environment
-        for var, value in os.environ.iteritems():
+        for var, value in os.environ.items():
             if value == vars.get(var):
                 del vars[var]
         return vars

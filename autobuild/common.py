@@ -47,7 +47,7 @@ import sys
 import tempfile
 import time
 
-from version import AUTOBUILD_VERSION_STRING
+from .version import AUTOBUILD_VERSION_STRING
 
 logger = logging.getLogger('autobuild.common')
 
@@ -241,7 +241,7 @@ def get_install_cache_dir():
         cache = get_temp_dir("install.cache")
     else:
         if not os.path.exists(cache):
-            os.makedirs(cache, mode=0755)
+            os.makedirs(cache, mode=0o755)
     return cache
 
 
@@ -258,7 +258,7 @@ def get_temp_dir(basename):
     else:
         tmpdir = "/var/tmp/%s/%s" % (user, basename)
     if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, mode=0755)
+        os.makedirs(tmpdir, mode=0o755)
     return tmpdir
 
 
@@ -311,7 +311,7 @@ def find_executable(executables, exts=None, path=None):
     path should either be None (search os.environ['PATH']) or a sequence of
     directory names to be searched in order.
     """
-    if isinstance(executables, basestring):
+    if isinstance(executables, str):
         executables = [executables]
     if exts is None:
         exts = sys.platform.startswith("win") and [".com", ".exe", ".bat", ".cmd"] or []

@@ -79,8 +79,10 @@ class AutobuildBaselineCompare:
         """
         output = self.tmp_file
         baseline = os.path.join(sys.path[0], baseline)
-        output_lines = [x.rstrip() for x in file(output, 'rb').readlines()]
-        baseline_lines = [x.rstrip() for x in file(baseline, 'rb').readlines()]
+        with open(output, 'rb') as f:
+            output_lines = [line.rstrip() for line in f]
+        with open(baseline, 'rb') as f:
+            baseline_lines = [line.rstrip() for line in f]
         udiff = difflib.unified_diff(baseline_lines, output_lines, fromfile=baseline,
                                      tofile=output, lineterm="")
         error = []

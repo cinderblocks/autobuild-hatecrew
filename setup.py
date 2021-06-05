@@ -39,7 +39,7 @@ import os.path
 # you (because you already have your package's dependencies installed), but it
 # will wreak havoc upon new users of your package, as they will not be able to
 # install your package without manually installing the dependencies first."
-execfile(os.path.join("autobuild", "version.py"))
+exec(compile(open(os.path.join("autobuild", "version.py"), "rb").read(), os.path.join("autobuild", "version.py"), 'exec'))
 # The previous execfile better have defined AUTOBUILD_VERSION_STRING!
 AUTOBUILD_VERSION_STRING                # NameError here means it didn't
 
@@ -71,7 +71,7 @@ setup(
     entry_points=dict(console_scripts=['autobuild=autobuild.autobuild_main:main']),
     scripts=[],
     license='MIT',
-    classifiers=filter(None, CLASSIFIERS.split("\n")),
+    classifiers=[_f for _f in CLASSIFIERS.split("\n") if _f],
     # argparse is specifically for Python 2.6 compatibility. If/when we drop
     # Python 2.6 support, the conditional argparse item can be removed from
     # install_requires: it's bundled with Python 2.7+.

@@ -38,9 +38,9 @@ except:
 from autobuild import configfile
 from autobuild import common
 from autobuild.autobuild_main import Autobuild
-from baseline_compare import AutobuildBaselineCompare
+from .baseline_compare import AutobuildBaselineCompare
 from autobuild.autobuild_tool_edit import AutobuildTool
-from basetest import BaseTest
+from .basetest import BaseTest
 from nose.tools import *                # assert_equals() et al.
 
 
