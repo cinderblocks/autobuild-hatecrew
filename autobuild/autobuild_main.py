@@ -35,7 +35,7 @@ class _local_scope(object):
     vermsg  = "\n%s You are running with Python %s.%s.%s." % \
                ((msgind*' ',) + sys.version_info[:3])
     if sys.version_info[:2] < (3, 4):
-        sys.exit("%s autobuild now requires Python 3.4" % (ERROR.ljust(msgind)))
+        sys.exit("%s autobuild 2+ requires Python 3.4" % (ERROR.ljust(msgind)))
 
 from . import common
 import argparse
@@ -45,7 +45,7 @@ from .common import AutobuildError
 ## Environment variable name used for default log level verbosity
 AUTOBUILD_LOGLEVEL = 'AUTOBUILD_LOGLEVEL'
 
-SCRIPT_DIR = Path(__file__).resolve().parent
+_SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class RunHelp(argparse.Action):
@@ -108,7 +108,7 @@ class Autobuild(object):
             self.register_tool(tool)
     
     def search_for_and_import_tools(self, tools_list):
-        for file_name in glob.glob(str(SCRIPT_DIR / 'autobuild_tool_*.py')):
+        for file_name in glob.glob(os.path.join(_SCRIPT_DIR, 'autobuild_tool_*.py')):
             module_name = Path(file_name).stem
             possible_tool_module = importlib.import_module('.{}'.format(module_name), package='autobuild')
             if hasattr(possible_tool_module, 'AutobuildTool'):

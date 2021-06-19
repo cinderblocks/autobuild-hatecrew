@@ -309,7 +309,7 @@ call "%s"%s
 def cygpath(*args):
     """run cygpath with specified command-line args, returning its output"""
     cmdline = ["cygpath"] + list(args)
-    stdout = subprocess.Popen(cmdline, stdout=subprocess.PIPE) \
+    stdout = subprocess.Popen(cmdline, stdout=subprocess.PIPE, universal_newlines=True) \
                        .communicate()[0].rstrip()
     logger.debug("%s => '%s'" % (cmdline, stdout))
     return stdout

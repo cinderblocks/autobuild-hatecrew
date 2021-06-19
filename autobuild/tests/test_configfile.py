@@ -38,7 +38,7 @@ class TestConfigFile(BaseTest, AutobuildBaselineCompare):
         BaseTest.setUp(self)
 
     def fake_config(self):
-        tmp_file = self.get_tmp_file(4)
+        tmp_file = self.get_tmp_file()
         config = configfile.ConfigurationDescription(tmp_file)
         package = configfile.PackageDescription('test')
         config.package_description = package
@@ -60,7 +60,7 @@ class TestConfigFile(BaseTest, AutobuildBaselineCompare):
         assert reloaded.package_description.platforms['common'].configurations['common'].build.get_command() == 'gcc'
 
     def test_configuration_inherit(self):
-        tmp_file = self.get_tmp_file(4)
+        tmp_file = self.get_tmp_file()
         config = configfile.ConfigurationDescription(tmp_file)
         package = configfile.PackageDescription('test')
         config.package_description = package

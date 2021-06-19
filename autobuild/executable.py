@@ -112,7 +112,7 @@ class Executable(common.Serialized):
                     continue
                 line = line.replace("\r\n", "\n")
                 line = line.replace("\r", "\n")
-                print(line, end=' ')  # Trailing , prevents an extra newline
+                print(line, end=' ')
             return process.wait()
 
     def show_command(self, commandlist, filters):

@@ -42,7 +42,8 @@ if __name__ == '__main__':
     autobuild = subprocess.Popen(command,
                                  stdout=subprocess.PIPE,
                                  # Use command shell to perform that search.
-                                 shell=sys.platform.startswith("win"))
+                                 shell=sys.platform.startswith("win"),
+                                 universal_newlines=True)
     stdout, stderr = autobuild.communicate()
     rc = autobuild.wait()
     try:

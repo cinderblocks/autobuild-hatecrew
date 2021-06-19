@@ -140,7 +140,7 @@ def check_platform_system_match(platform):
         if not is_system_windows():
             platform_should_be="Windows"
     elif platform in (PLATFORM_LINUX, PLATFORM_LINUX64):
-        if sys.platform != 'linux2':
+        if not sys.platform.startswith('linux'):
             platform_should_be="Linux"
     elif platform in (PLATFORM_DARWIN, PLATFORM_DARWIN64):
         if sys.platform != 'darwin':
@@ -171,7 +171,7 @@ def establish_platform(specified_platform=None, addrsize=DEFAULT_ADDRSIZE):
             Platform = PLATFORM_DARWIN64
         else:
             Platform = PLATFORM_DARWIN
-    elif sys.platform == 'linux2':
+    elif sys.platform.startswith('linux'):
         if addrsize == 64:
             Platform = PLATFORM_LINUX64
         else:
@@ -349,10 +349,7 @@ def compute_md5(path):
     """
     Returns the MD5 sum for the given file.
     """
-    try:
-        from hashlib import md5      # Python 2.6
-    except ImportError:
-        from md5 import new as md5   # Python 2.5 and earlier
+    from hashlib import md5
 
     try:
         stream = open(path, 'rb')

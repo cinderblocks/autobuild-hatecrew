@@ -40,6 +40,7 @@ from io import StringIO
 
 from autobuild import common
 
+
 class BaseTest(unittest.TestCase):
     def setUp(self):
         self.this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -61,7 +62,7 @@ class BaseTest(unittest.TestCase):
         through.
         """
         command = (self.autobuild_bin,) + args
-        return subprocess.check_output(command, **kwds).rstrip()
+        return subprocess.check_output(command, universal_newlines=True, **kwds).rstrip()
 
     # On Windows, need some retry logic wrapped around removing files (SIGHH)
     if not sys.platform.startswith("win"):

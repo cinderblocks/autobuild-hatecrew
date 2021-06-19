@@ -128,7 +128,8 @@ class TestSourceEnvironment(BaseTest):
         if the child process terminates with nonzero rc.
         """
         autobuild = subprocess.Popen((self.autobuild_bin, "source_environment") + args,
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     universal_newlines=True)
         stdout, stderr = autobuild.communicate()
         rc = autobuild.wait()
         assert rc == 0, "%s source_environment terminated with %s:\n%s" % \
@@ -151,7 +152,7 @@ class TestSourceEnvironment(BaseTest):
     eval "$('%s' source_environment %s)"
     %s""" % (self.autobuild_bin,
              ' '.join("'%s'" % arg for arg in args),
-             commands)]).rstrip()
+             commands)], universal_newlines=True).rstrip()
 
         def shell_path(self, path):
             return path
@@ -205,7 +206,7 @@ for var in $(set | grep '^[^ ]' | cut -s -d= -f 1)
 do export $var
 done
 '%s' -c 'import os, pprint
-pprint.pprint(os.environ)'""" % self.shell_path(sys.executable)))
+pprint.pprint(dict(os.environ))'""" % self.shell_path(sys.executable)))
         # filter out anything inherited from our own environment
         for var, value in os.environ.items():
             if value == vars.get(var):

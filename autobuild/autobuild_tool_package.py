@@ -227,7 +227,7 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     if not dry_run:
         if results_file:
             try:
-                results=open(results_file,'wb')
+                results=open(results_file,'w')
             except IOError as err:
                 raise PackageError("Unable to open results file %s:\n%s" % (results_file, err))
             results.write('autobuild_package_name="%s"\n' % package_description.name)
@@ -316,7 +316,8 @@ def _create_tarfile(tarfilename, build_directory, filelist, results):
                 # Make sure permissions are set on Windows.
                 if common.is_system_windows():
                     command = ["CACLS", file, "/T", "/G", getpass.getuser() + ":F"]
-                    CACLS = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    CACLS = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT, universal_newlines=True)
                     output = CACLS.communicate("Y")[0]
                     rc = CACLS.wait()
                     if rc != 0:
