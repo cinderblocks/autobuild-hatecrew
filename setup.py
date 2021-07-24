@@ -40,8 +40,8 @@ import os.path
 # you (because you already have your package's dependencies installed), but it
 # will wreak havoc upon new users of your package, as they will not be able to
 # install your package without manually installing the dependencies first."
-execfile(os.path.join("autobuild", "version.py"))
-# The previous execfile better have defined AUTOBUILD_VERSION_STRING!
+exec(open(os.path.join('autobuild', 'version.py'), 'rb').read())
+# The previous exec better have defined AUTOBUILD_VERSION_STRING!
 AUTOBUILD_VERSION_STRING                # NameError here means it didn't
 
 PACKAGE_NAME = 'autobuild'
@@ -72,13 +72,10 @@ setup(
     entry_points=dict(console_scripts=['autobuild=autobuild.autobuild_main:main']),
     scripts=[],
     license='MIT',
-    classifiers=filter(None, CLASSIFIERS.split("\n")),
-    # argparse is specifically for Python 2.6 compatibility. If/when we drop
-    # Python 2.6 support, the conditional argparse item can be removed from
-    # install_requires: it's bundled with Python 2.7+.
-    install_requires=['llbase', 'pydot', ] + \
-                     (['backports.lzma'] if sys.version_info[:2] < (3, 3) else []) + \
-                     (['pysha3'] if sys.version_info[:2] < (3, 6) else []) + \
-                     (['argparse'] if sys.version_info[:2] < (2, 7) else []),
+    classifiers=[line for line in CLASSIFIERS.split("\n") if line],
+    install_requires=['llbase', 'pydot'] + \
+                     (['pysha3'] if sys.version_info[:2] < (3, 6) else [])
+    extras_require={"dev": ["nose"]},
+    python_requires=">=3.4",
     #ext_modules=ext_modules,
     )

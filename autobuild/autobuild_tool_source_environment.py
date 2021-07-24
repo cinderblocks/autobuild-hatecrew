@@ -36,8 +36,8 @@ import string
 import subprocess
 import tempfile
 
-import common
-import autobuild_base
+from . import common
+from . import autobuild_base
 
 logger = logging.getLogger('autobuild.source_environment')
 
@@ -92,7 +92,8 @@ def _available_vsvers():
             [_VSWHERE_PATH, '-all', # '-legacy',
              '-products', '*',
              '-requires', 'Microsoft.Component.MSBuild',
-             '-property', 'installationVersion'])
+             '-property', 'installationVersion'],
+            universal_newlines=True)
     except OSError as err:
         if err.errno != errno.ENOENT:
             raise
@@ -156,7 +157,7 @@ def load_vsvars(vsver):
             where = subprocess.check_output(
                 [_VSWHERE_PATH, '-version', '[%s,%s)' % (version, vs_ver_nextver), '-products', '*',
                  '-requires', 'Microsoft.Component.MSBuild',
-                 '-property', 'InstallationPath']).rstrip()
+                 '-property', 'InstallationPath'], universal_newlines=True).rstrip()
         except OSError as err:
             if err.errno != errno.ENOENT:
                 raise
@@ -240,7 +241,7 @@ def load_vsvars(vsver):
     # only environment variables actually modified by vcvarsall.bat.
     # Use items() rather than iteritems(): capture the list of items up front
     # instead of trying to traverse vcvars while modifying it.
-    for var, value in vcvars.items():
+    for var, value in list(vcvars.items()):
         # Bear in mind that some variables were introduced by vcvarsall.bat and
         # are therefore NOT in our os.environ.
         if os.environ.get(var) == value:
@@ -265,7 +266,7 @@ def get_vars_from_bat(batpath, *args):
         # -- to format the ENTIRE environment into temp_output.name.
         temp_script_content = """\
 call "%s"%s
-"%s" -c "import os, pprint; pprint.pprint(os.environ)" > "%s"
+"%s" -c "import os, pprint; pprint.pprint(dict(os.environ))" > "%s"
 """ % (batpath, ''.join(' '+arg for arg in args), sys.executable, temp_output.name)
         # Specify mode="w" for text mode ("\r\n" newlines); default is binary.
         with tempfile.NamedTemporaryFile(suffix=".cmd", delete=False, mode="w") as temp_script:
@@ -313,7 +314,7 @@ call "%s"%s
 def cygpath(*args):
     """run cygpath with specified command-line args, returning its output"""
     cmdline = ["cygpath"] + list(args)
-    stdout = subprocess.Popen(cmdline, stdout=subprocess.PIPE) \
+    stdout = subprocess.Popen(cmdline, stdout=subprocess.PIPE, universal_newlines=True) \
                        .communicate()[0].rstrip()
     logger.debug("%s => '%s'" % (cmdline, stdout))
     return stdout
@@ -493,7 +494,7 @@ similar.""")
         # A pathname ending with a backslash (as many do on Windows), when
         # embedded in quotes in a bash script, might inadvertently escape the
         # close quote. Remove all trailing backslashes.
-        vsvarslist = [(k, v.rstrip('\\')) for (k, v) in vsvars.iteritems()]
+        vsvarslist = [(k, v.rstrip('\\')) for (k, v) in vsvars.items()]
 
         # may as well sort by keys
         vsvarslist.sort()
@@ -509,8 +510,8 @@ similar.""")
     # Before expanding template with var_mapping, finalize the 'exports' and
     # 'vars' dicts into var_mapping["vars"] as promised above.
     var_mapping["vars"] = '\n'.join(itertools.chain(
-        (("    export %s='%s'" % (k, v)) for k, v in exports.iteritems()),
-        (("    %s='%s'" % (k, v)) for k, v in vars.iteritems()),
+        (("    export %s='%s'" % (k, v)) for k, v in exports.items()),
+        (("    %s='%s'" % (k, v)) for k, v in vars.items()),
         ))
 
     sys.stdout.write(template % var_mapping)
@@ -649,6 +650,7 @@ def internal_source_environment(configurations, varsfile):
                 win32 ="WINDOWS",
                 cygwin="WINDOWS",
                 darwin="DARWIN",
+                linux="LINUX",
                 linux2="LINUX",
                 )[sys.platform]
         except KeyError:
@@ -657,7 +659,7 @@ def internal_source_environment(configurations, varsfile):
         else:
             platform_re = re.compile(r'(.*_BUILD)_%s(.*)$' % platform)
             # use items() rather than iteritems(): we're modifying as we iterate
-            for var, value in vfvars.items():
+            for var, value in list(vfvars.items()):
                 match = platform_re.match(var)
                 if match:
                     # add a shorthand variable that excludes _PLATFORM
@@ -673,7 +675,7 @@ def internal_source_environment(configurations, varsfile):
                                ", ".join(configurations[1:]))
             configuration_re = re.compile(r'(.*_BUILD)_%s(.*)$' % configuration)
             # use items() because we're modifying as we iterate
-            for var, value in vfvars.items():
+            for var, value in list(vfvars.items()):
                 match = configuration_re.match(var)
                 if match:
                     # add a shorthand variable that excludes _CONFIGURATION
