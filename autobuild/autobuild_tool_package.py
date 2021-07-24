@@ -432,7 +432,7 @@ def _print_hash(filename, results, results_dict):
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print("md5    %s" % m.hexdigest())
+    print("md5    %s" % md5)
     print("sha256    %s" % sha256)
     print("sha3_256    %s" % sha3_256)
     print("sha3_384    %s" % sha3_384)
