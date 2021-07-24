@@ -316,22 +316,19 @@ def _create_tarfile(tarfilename, format, build_directory, filelist, results, res
     current_directory = os.getcwd()
     os.chdir(build_directory)
     try:
-        from cStringIO import StringIO as BIO
-    except ImportError: # python 3
-        from io import BytesIO as BIO
+        if format == 'txz':
+            tarfilename = tarfilename + '.tar.xz'
+            mode = 'w:xz'
+        elif format == 'tbz2':
+            tarfilename = tarfilename + '.tar.bz2'
+            mode = 'w:bz2'
+        elif format == 'tgz':
+            tarfilename = tarfilename + '.tar.gz'
+            mode = 'w:gz'
+        else:
+            raise PackageError("unknown tar archive format: %s" % format)
 
-    if format == 'txz':
-        tarfilename = tarfilename + '.tar.xz'
-    elif format == 'tbz2':
-        tarfilename = tarfilename + '.tar.bz2'
-    elif format == 'tgz':
-        tarfilename = tarfilename + '.tar.gz'
-    else:
-        raise PackageError("unknown tar archive format: %s" % format)
-
-    try:
-        file_out = BIO()
-        tfile = tarfile.open(fileobj = file_out, mode = 'w')
+        tfile = tarfile.open(tarfilename, mode)
         for file in filelist:
             try:
                 # Make sure permissions are set on Windows.
@@ -350,25 +347,6 @@ def _create_tarfile(tarfilename, format, build_directory, filelist, results, res
                 # Apparently you can get any of the above if the specified filename can't be opened
                 raise PackageError("unable to add %s to %s: %s" % (file, tarfilename, err))
         tfile.close()
-
-        if format == 'txz':
-            try:
-                import lzma
-            except ImportError:
-                from backports import lzma
-            with lzma.open(filename=tarfilename, mode="w", preset=9|lzma.PRESET_EXTREME) as f:
-                f.write(file_out.getvalue())
-                f.close()
-        elif format == 'tbz2':
-            import bz2
-            with bz2.BZ2File(tarfilename, "w") as f:
-                f.write(file_out.getvalue())
-                f.close()
-        elif format == 'tgz':
-            import gzip
-            with gzip.open(tarfilename, "w") as f:
-                f.write(file_out.getvalue())
-                f.close()
     finally:
         os.chdir(current_directory)
     # printing unconditionally on stdout for backward compatibility

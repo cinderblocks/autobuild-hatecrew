@@ -365,7 +365,6 @@ def compute_md5(path):
     return hasher.hexdigest()
 
 
-
 def compute_sha256(path):
     """
     Returns the SHA256 sum for the given file.

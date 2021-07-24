@@ -334,35 +334,9 @@ def extract_metadata_from_package(archive_path, metadata_file_name):
     if not os.path.exists(archive_path):
         logger.error("no package found at: %s" % archive_path)
     else:
-        try:
-            from cStringIO import StringIO as BIO
-        except ImportError: # python 3
-            from io import BytesIO as BIO
-
         logger.debug("extracting metadata from %s" % os.path.basename(archive_path))
-        if ".tar.xz" in archive_path or ".tar.bz2" in archive_path or ".tar.gz" in archive_path:
-            filedata = None
-            if ".tar.xz" in archive_path:
-                try:
-                    import lzma
-                except ImportError:
-                    from backports import lzma
-                with lzma.open(archive_path, "r") as f:
-                    filedata = f.read()
-                    f.close()
-            elif ".tar.bz2" in archive_path:
-                import bz2
-                with bz2.BZ2File(archive_path, "r") as f:
-                    filedata = f.read()
-                    f.close()
-            elif ".tar.gz" in archive_path:
-                import gzip
-                with gzip.open(archive_path, "r") as f:
-                    filedata = f.read()
-                    f.close()
-
-            file_in = BIO(filedata)
-            tar = tarfile.open(fileobj=file_in, mode='r')
+        if tarfile.is_tarfile(archive_path):
+            tar = tarfile.open(archive_path, 'r')
             try:
                 metadata_file = tar.extractfile(metadata_file_name)
             except KeyError as err:
