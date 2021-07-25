@@ -514,7 +514,8 @@ similar.""")
         (("    %s='%s'" % (k, v)) for k, v in vars.items()),
         ))
 
-    sys.stdout.write(template % var_mapping)
+    sys.stdout.buffer.write((template % var_mapping).encode('utf-8'))
+    sys.stdout.flush()
 
     if get_params:
         # *TODO - run get_params.generate_bash_script()
