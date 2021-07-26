@@ -3,6 +3,10 @@
 # https://hub.docker.com/r/library/python/tags/
 image: python:3.9
 
+stages:
+  - test
+  - package
+
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
@@ -25,13 +29,17 @@ before_script:
   - source venv/bin/activate
 
 test:
+  stage: test
+  allow_failure: true
   script:
     - apt-get update && apt-get install -y -qq graphviz
+    - pip install nose
     - python setup.py test
     - pip install tox flake8  # you can also use tox
     - tox -e py36,flake8
 
-run:
+upload_package:
+  stage: package
   script:
     - python setup.py sdist bdist_wheel
     - pip install twine
