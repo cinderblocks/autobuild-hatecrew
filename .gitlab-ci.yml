@@ -11,7 +11,7 @@ include:
 
 stages:
   - test
-  - run
+  - upload
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -28,6 +28,7 @@ before_script:
 - source venv/bin/activate
 
 test:
+  stage: test
   allow_failure: true
   script:
   - pip install nose
@@ -35,7 +36,9 @@ test:
   - pip install tox flake8
   - tox -e py36,flake8
 
-run:
+upload_package:
+  stage: upload
+  allow_failure: true
   script:
   - python setup.py sdist bdist_wheel
   - pip install twine
