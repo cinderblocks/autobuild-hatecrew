@@ -6,35 +6,37 @@
 image: python:2.7
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
 cache:
   paths:
   - ".cache/pip"
   - venv/
+
 before_script:
 - python -V
 - pip install virtualenv
 - virtualenv venv
 - source venv/bin/activate
-".test":
+
+.test:
   script:
   - python setup.py test
   - pip install tox flake8
   - tox -e py36,flake8
+
 run:
   script:
   - python setup.py sdist bdist_wheel
   - pip install twine
-  - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine
-    upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
-    dist/*
+  - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   artifacts:
     paths:
     - dist/*.whl
-stages:
-- run
+
 sast:
   variables:
     SAST_BANDIT_EXCLUDED_PATHS: "*/tests/*, */venv/*"
   stage: run
 include:
 - template: Security/SAST.gitlab-ci.yml
+- template: Dependency-Scanning.gitlab-ci.yml
