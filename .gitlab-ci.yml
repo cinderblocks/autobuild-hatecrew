@@ -1,7 +1,7 @@
 # This file is a template, and might need editing before it works on your project.
 # Official language image. Look for the different tagged releases at:
 # https://hub.docker.com/r/library/python/tags/
-image: python:3.9-alpine
+image: python:3.9
 
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -24,8 +24,9 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
 
-.test:
+test:
   script:
+    - apt-get update && apt-get install -y -qq graphviz
     - python setup.py test
     - pip install tox flake8  # you can also use tox
     - tox -e py36,flake8
