@@ -31,11 +31,10 @@ run:
     paths:
     - dist/*.whl
 stages:
-- test
 - run
 sast:
   variables:
-    SAST_BANDIT_EXCLUDED_PATHS: "*/tests/*, */venv/"
+    SAST_BANDIT_EXCLUDED_PATHS: "*/tests/*, */venv/*"
   stage: run
 include:
 - template: Security/SAST.gitlab-ci.yml
