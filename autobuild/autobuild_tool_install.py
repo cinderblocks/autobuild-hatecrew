@@ -231,8 +231,9 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
 
     headers = {}
     if "git.alchemyviewer.org" in package_url:
-        apikey = os.environ.get("AUTOBUILD_AUTH_TOKEN", 'Qxz1Xz79EbpQ-cZVMnvz')
-        headers['PRIVATE-TOKEN'] = apikey
+        apikey = os.environ.get("AUTOBUILD_AUTH_TOKEN")
+        if apikey is not None:
+            headers['PRIVATE-TOKEN'] = apikey
 
     cache_file = None
     download_retries = 3
