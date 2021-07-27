@@ -208,7 +208,7 @@ class ConfigurationDescription(common.Serialized):
                             % build_directory)
                 os.makedirs(build_directory)
             else:
-                logger.warn("Dry run mode: not creating build directory %s"
+                logger.warning("Dry run mode: not creating build directory %s"
                             % build_directory)
         return build_directory
 
@@ -241,7 +241,7 @@ class ConfigurationDescription(common.Serialized):
             with open(self.path, 'rb') as f:
                 autobuild_xml = f.read()
             if not autobuild_xml:
-                logger.warn("Configuration file '%s' is empty" % self.path)
+                logger.warning("Configuration file '%s' is empty" % self.path)
                 return
             try:
                 saved_data = llsd.parse(autobuild_xml)
@@ -256,7 +256,7 @@ class ConfigurationDescription(common.Serialized):
             self.__init_from_dict(saved_data)
             logger.debug("Configuration file '%s'" % self.path)
             if orig_ver:
-                logger.warn("Saving configuration file %s in format %s" %
+                logger.warning("Saving configuration file %s in format %s" %
                             (self.path, AUTOBUILD_CONFIG_VERSION))
                 self.save()
                 # We don't want orig_ver to appear in the saved file: that's
@@ -265,7 +265,7 @@ class ConfigurationDescription(common.Serialized):
                 # read.
                 self["orig_ver"] = orig_ver
         elif not os.path.exists(self.path):
-            logger.warn("Configuration file '%s' not found" % self.path)
+            logger.warning("Configuration file '%s' not found" % self.path)
         else:
             raise ConfigurationError("cannot create configuration file %s" % self.path)
 
@@ -382,7 +382,7 @@ class Dependencies(common.Serialized):
             with open(self.path, 'rb') as f:
                 installed_xml = f.read()
             if not installed_xml:
-                logger.warn("Installed file '%s' is empty" % self.path)
+                logger.warning("Installed file '%s' is empty" % self.path)
                 return
             logger.debug("Installed file '%s'" % self.path)
             try:
@@ -448,12 +448,12 @@ class MetadataDescription(common.Serialized):
                 with open(self.path, 'rb') as f:
                     metadata_xml = f.read()
                 if not metadata_xml:
-                    logger.warn("Metadata file '%s' is empty" % self.path)
+                    logger.warning("Metadata file '%s' is empty" % self.path)
                     self.dirty=False
                     return
             elif not os.path.exists(self.path):
                 if not create_quietly:
-                    logger.warn("Configuration file '%s' not found" % self.path)
+                    logger.warning("Configuration file '%s' not found" % self.path)
         elif stream:
             metadata_xml = stream.read()
         if metadata_xml:
@@ -579,7 +579,7 @@ class PackageDescription(common.Serialized):
         produce a deprecation warning.
         """
         if self.version:
-            logger.warn("package_description.version ignored in %s; use version_file instead" %
+            logger.warning("package_description.version ignored in %s; use version_file instead" %
                         AUTOBUILD_CONFIG_FILE)
 
         if not self.version_file:
