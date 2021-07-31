@@ -33,10 +33,12 @@ test:
   allow_failure: true
   script:
     - apt-get update && apt-get install -y -qq graphviz
-    - pip install nose
-    - python setup.py test
-    - pip install tox flake8  # you can also use tox
-    - tox -e py36,flake8
+    - pip install nose pytest llbase
+    - pytest --junitxml=pytest_report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: pytest_report.xml
 
 upload_package:
   stage: package
