@@ -234,9 +234,9 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                 else:
                     graph_file = os.path.join(tempfile.gettempdir(), 
                                               metadata['package_description']['name'] + "_graph_" 
-                                              + args.graph_type + '.png')
+                                              + args.graph_type + '.svg')
                 logger.info("writing %s" % graph_file)
-                graph.write_png(graph_file, prog=args.graph_type)
+                graph.write_svg(graph_file, prog=args.graph_type)
                 if args.display and not args.graph_file:
                     webbrowser.open('file:'+graph_file)
             else:
