@@ -136,8 +136,7 @@ class TestPackaging(BaseTest):
         self.tar_has_expected(self.tar_name)
 
     def test_results(self):
-        from nose.plugins.skip import SkipTest
-        raise SkipTest("pydot not installed, skipping")
+        raise unittest.SkipTest("pydot not installed, skipping")
         logger.setLevel(logging.DEBUG)
         results_output=tempfile.mktemp()
         package.package(self.config, self.config.get_build_directory(None, 'common'), 

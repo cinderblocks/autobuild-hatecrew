@@ -29,9 +29,8 @@ $/LicenseInfo$
 """
 
 import re
-from unittest import TestCase
-from nose.tools import *                # assert_equal() et al.
-from .basetest import exc
+import unittest
+from .basetest import *
 from .patch import patch
 
 from autobuild import update
@@ -48,9 +47,9 @@ def test_register():
         # directly examining _updaters is fragile; update.py maintenance may
         # require changing this test; but _register() has no other observable
         # side effects
-        assert_equal(len(update._updaters["1.1"]), 2)
+        assert len(update._updaters["1.1"]) == 2
 
-class TestUpdater(TestCase):
+class TestUpdater(BaseTest):
     def setUp(self):
         self.save_confver  = update.AUTOBUILD_CONFIG_VERSION
         self.save_updaters = update._updaters
@@ -77,27 +76,27 @@ class TestUpdater(TestCase):
 
         # one previous version, need one updater
         triples = update._get_applicable_updaters("NAME", "1.3")
-        assert_equal(len(triples), 1)
-        assert_equal(triples[0][:2], ("1.3", "1.4"))
+        self.assertEqual(len(triples), 1)
+        self.assertEqual(triples[0][:2], ("1.3", "1.4"))
 
         # two versions older, need two updaters
         triples = update._get_applicable_updaters("NAME", "1.2")
-        assert_equal(len(triples), 2)
-        assert_equal(triples[0][:2], ("1.2", "1.3"))
-        assert_equal(triples[1][:2], ("1.3", "1.4"))
+        self.assertEqual(len(triples), 2)
+        self.assertEqual(triples[0][:2], ("1.2", "1.3"))
+        self.assertEqual(triples[1][:2], ("1.3", "1.4"))
 
         # three versions older, need three updaters
         triples = update._get_applicable_updaters("NAME", "1.1")
-        assert_equal(len(triples), 3)
-        assert_equal(triples[0][:2], ("1.1", "1.2"))
-        assert_equal(triples[1][:2], ("1.2", "1.3"))
-        assert_equal(triples[2][:2], ("1.3", "1.4"))
+        self.assertEqual(len(triples), 3)
+        self.assertEqual(triples[0][:2], ("1.1", "1.2"))
+        self.assertEqual(triples[1][:2], ("1.2", "1.3"))
+        self.assertEqual(triples[2][:2], ("1.3", "1.4"))
 
         # verify that the functions we registered are the ones we get back
         config = []
         for _, _, func in triples:
             config = func(config)
-        assert_equal(config, ["to 1.2", "to 1.3", "to 1.4"])
+        self.assertEqual(config, ["to 1.2", "to 1.3", "to 1.4"])
 
         # way way old, so sorry
         with exc(update.UpdateError):
@@ -108,9 +107,9 @@ class TestUpdater(TestCase):
 
         # conversion from 1.2 should now always take the shortcut
         triples = update._get_applicable_updaters("NAME", "1.1")
-        assert_equal(len(triples), 2)
-        assert_equal(triples[0][:2], ("1.1", "1.2"))
-        assert_equal(triples[1][:2], ("1.2", "1.4"))
+        self.assertEqual(len(triples), 2)
+        self.assertEqual(triples[0][:2], ("1.1", "1.2"))
+        self.assertEqual(triples[1][:2], ("1.2", "1.4"))
 
         # whoops, suddenly we're trying to reach a version for which we have
         # no updater
@@ -157,12 +156,12 @@ class TestUpdater(TestCase):
 
         # current config needs no update
         config, orig_ver = update.convert_to_current("NAME", dict(version="1.4"))
-        assert_equal(orig_ver, None)
-        assert "track" not in config, "updater called on current config"
+        self.assertIsNone(orig_ver)
+        self.assertNotIn("track", config, msg="updater called on current config")
 
         # oldest supported config gets all updaters
         config, orig_ver = update.convert_to_current("NAME", dict(version="1.1"))
-        assert_equal(orig_ver, "1.1")
-        assert "track" in config, "updater not called on old config"
-        assert_equal(config["track"], ["to 1.2", "to 1.3", "to 1.4"])
-        assert_equal(config["version"], "1.4")
+        self.assertEqual(orig_ver, "1.1")
+        self.assertIn("track", config, msg="updater not called on old config")
+        self.assertEqual(config["track"], ["to 1.2", "to 1.3", "to 1.4"])
+        self.assertEqual(config["version"], "1.4")

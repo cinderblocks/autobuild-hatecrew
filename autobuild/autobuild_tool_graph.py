@@ -44,7 +44,7 @@ except ImportError:
     # will fail. But we don't want a spurious test failure showing up; just skip
     # that test.
     try:
-        from nose.plugins.skip import SkipTest
+        from unittest import SkipTest
     except ImportError:
         # whoops, user machine, it's a real problem: use real ImportError
         SkipTest = ImportError

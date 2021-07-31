@@ -39,7 +39,6 @@ import urllib.parse
 import posixpath
 import subprocess
 from .basetest import *
-from nose.tools import *                # assert_equals etc.
 from string import Template
 from threading import Thread
 from http.server import HTTPServer
@@ -313,7 +312,7 @@ class BaseTest(object):
         # set_package() all the time is to avoid confusion with the predefined
         # install_config file found in tests/data. If this assertion fires, we
         # should pick a different package name for the test.
-        assert_not_in(package.name, self.config.installables)
+        self.assertNotIn(package.name, self.config.installables)
         self.set_package(package)
 
     def set_package(self, package):
@@ -350,7 +349,7 @@ class TestInstallArchive(BaseTest):
         with CaptureStdout() as stream:
             self.options.list_dirty=True
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(stream.getvalue(), 'Dirty Packages: \n')
+        self.assertEqual(stream.getvalue(), 'Dirty Packages: \n')
 
     def test_dry_run(self):
         dry_opts = self.options.copy()
@@ -452,7 +451,7 @@ class TestInstallArchive(BaseTest):
         with CaptureStdout() as stream:
             self.options.list_dirty=True
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(stream.getvalue(), 'Dirty Packages: nometa\n')
+        self.assertEqual(stream.getvalue(), 'Dirty Packages: nometa\n')
 
     def test_conflicting_file(self):
         # fail because the package contains a file installed by another package
@@ -513,7 +512,7 @@ class TestInstallArchive(BaseTest):
         self.options.list_archives = True
         with CaptureStdout() as stream:
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(set_from_stream(stream), set(('argparse', 'bogus')))
+        self.assertEqual(set_from_stream(stream), set(('argparse', 'bogus')))
 
     def test_list_licenses(self):
         self.options.package = None # install all
@@ -522,7 +521,7 @@ class TestInstallArchive(BaseTest):
         self.options.list_licenses = True
         with CaptureStdout() as stream:
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(set_from_stream(stream), set(("GPL", "Apache 2.0", "tut")))
+        self.assertEqual(set_from_stream(stream), set(("GPL", "Apache 2.0", "tut")))
 
     def test_copyrights(self):
         self.options.package = None # install all
@@ -531,7 +530,7 @@ class TestInstallArchive(BaseTest):
         self.options.copyrights = True
         with CaptureStdout() as stream:
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(stream.getvalue(), "Copyright 2014 Linden Research, Inc.\nbogus: The Owner\n")
+        self.assertEqual(stream.getvalue(), "Copyright 2014 Linden Research, Inc.\nbogus: The Owner\n")
 
     def test_versions(self):
         self.options.platform=None
@@ -541,7 +540,7 @@ class TestInstallArchive(BaseTest):
         self.options.versions = True
         with CaptureStdout() as stream:
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(stream.getvalue(), "bogus: 1\n")
+        self.assertEqual(stream.getvalue(), "bogus: 1\n")
 
 # -------------------------------------  -------------------------------------
 class TestInstallCachedArchive(BaseTest):
@@ -564,7 +563,7 @@ class TestInstallCachedArchive(BaseTest):
         with CaptureStdout() as stream:
             self.options.list_dirty=True
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(stream.getvalue(), 'Dirty Packages: \n')
+        self.assertEqual(stream.getvalue(), 'Dirty Packages: \n')
 
 # -------------------------------------  -------------------------------------
 class TestInstallLocalArchive(BaseTest):
@@ -589,7 +588,7 @@ class TestInstallLocalArchive(BaseTest):
         with CaptureStdout() as stream:
             self.options.list_dirty=True
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(stream.getvalue(), 'Dirty Packages: bogus\n')
+        self.assertEqual(stream.getvalue(), 'Dirty Packages: bogus\n')
             
     def test_only_local(self):
         self.options.local_archives=[os.path.join(mydir, "data", "bogus-0.1-common-111.tar.bz2")]
@@ -680,7 +679,7 @@ class TestInstall(BaseTest):
         with CaptureStdout() as stream:
             self.options.list_archives=True
             autobuild_tool_install.AutobuildTool().run(self.options)
-        assert_equal(set_from_stream(stream), set(("argparse", "bogus")))
+        self.assertEqual(set_from_stream(stream), set(("argparse", "bogus")))
 
 if __name__ == '__main__':
     unittest.main()

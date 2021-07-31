@@ -75,7 +75,6 @@ setup(
     classifiers=[line for line in CLASSIFIERS.split("\n") if line],
     install_requires=['llbase', 'pydot'] + \
                      (['pysha3'] if sys.version_info[:2] < (3, 6) else []),
-    extras_require={"dev": ["nose"]},
     python_requires=">=3.4",
     #ext_modules=ext_modules,
     )
