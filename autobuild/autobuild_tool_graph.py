@@ -59,6 +59,7 @@ import logging
 from . import configfile
 from . import autobuild_base
 from .autobuild_tool_install import extract_metadata_from_package
+from .autobuild_tool_source_environment import get_enriched_environment
 
 logger = logging.getLogger('autobuild.graph')
 
@@ -98,7 +99,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             default=configfile.AUTOBUILD_CONFIG_FILE,
                             help="The file used to describe what should be installed and built\n  (defaults to $AUTOBUILD_CONFIG_FILE or \"autobuild.xml\").")
         parser.add_argument('--configuration', '-c', 
-                            dest='configuration',
+                            dest='configurations',
                             help="specify build configuration\n(may be specified in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
@@ -134,12 +135,15 @@ class AutobuildTool(autobuild_base.AutobuildBase):
             logger.info("searching for metadata in the current build tree")
             config_filename = args.config_filename
             config = configfile.ConfigurationDescription(config_filename)
-            metadata_file = os.path.join(config.get_build_directory(args.configuration, platform), configfile.PACKAGE_METADATA_FILE)
+            environment = get_enriched_environment(args.configurations)
+            # and expand its $variables according to the environment.
+            config.expand_platform_vars(environment)
+
+            metadata_file = os.path.join(config.get_build_directory(args.configurations, platform), configfile.PACKAGE_METADATA_FILE)
             if not os.path.exists(metadata_file):
                 logger.warning("No complete metadata file found; attempting to use partial data from installed files")
                 # get the absolute path to the installed-packages.xml file
                 args.all = False
-                args.configurations = args.configuration
                 install_dirs = common.select_directories(args, config, "install", "getting installed packages",
                                                          lambda cnf:
                                                          os.path.join(config.get_build_directory(cnf, platform), "packages"))
