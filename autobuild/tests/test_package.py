@@ -245,7 +245,7 @@ $''' % (re.escape(os.path.basename(self.tar_name)), "[0-9a-f]{32}", re.escape(os
                                 ,platform_config
                                 ,{'PLATFORM':self.platform})
         self.options.autobuild_filename = platform_config
-        with ExpectError("No files matched manifest specifiers:\n"+'\n'.join(["missing/\*.txt","not_there.txt"]),
+        with ExpectError("No files matched manifest specifiers:\n"+'\n'.join(["missing/\\*.txt","not_there.txt"]),
                          "Missing files not detected"):
             package.AutobuildTool().run(self.options)
 
