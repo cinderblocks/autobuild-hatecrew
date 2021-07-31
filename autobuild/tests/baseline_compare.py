@@ -71,7 +71,8 @@ class AutobuildBaselineCompare:
         fails.
         """
         self.failed = False
-        self.tmp_file = tempfile.NamedTemporaryFile(prefix="test_output_", delete=False).name
+        with tempfile.NamedTemporaryFile(prefix="test_output_", delete=True) as named_tfile:
+            self.tmp_file = named_tfile.name
         return self.tmp_file
 
     def diff_tmp_file_against_baseline(self, baseline):
