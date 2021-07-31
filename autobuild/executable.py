@@ -105,7 +105,7 @@ class Executable(common.Serialized):
         else:
             # have to filter, so run stdout through a pipe
             process = subprocess.Popen(commandlist, env=environment,
-                                       stdout=subprocess.PIPE)
+                                       stdout=subprocess.PIPE, universal_newlines=True)
             filters_re = [re.compile(filter, re.MULTILINE) for filter in filters]
             for line in process.stdout:
                 if any(regex.search(line) for regex in filters_re):

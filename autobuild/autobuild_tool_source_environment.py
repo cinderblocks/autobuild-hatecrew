@@ -280,7 +280,7 @@ call "%s"%s
             cmdline = ['cmd', '/Q', '/C', temp_script_name]
             logger.debug(cmdline)
             script = subprocess.Popen(cmdline,
-                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             logger.debug(script.communicate()[0].rstrip())
             rc = script.wait()
             if rc != 0:
@@ -514,8 +514,14 @@ similar.""")
         (("    %s='%s'" % (k, v)) for k, v in vars.items()),
         ))
 
-    sys.stdout.buffer.write((template % var_mapping).encode('utf-8'))
-    sys.stdout.flush()
+    formatted_template = (template % var_mapping)
+
+    if hasattr(sys.stdout, 'buffer'):
+        with os.fdopen(sys.stdout.fileno(), "wb", closefd=False) as stdout:
+            stdout.write(formatted_template.encode(sys.stdout.encoding))
+            stdout.flush()
+    else:
+        sys.stdout.write(formatted_template)
 
     if get_params:
         # *TODO - run get_params.generate_bash_script()

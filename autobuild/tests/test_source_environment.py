@@ -175,18 +175,18 @@ class TestSourceEnvironment(BaseTest):
             srcenv = self.autobuild("source_environment", *args)
             scriptname = os.path.join(self.tempdir, "source_env_and.sh")
             # binary mode because '\r\n' confuses bash
-            with open(scriptname, "wb") as scriptf:
+            with open(scriptname, "w", newline='\n') as scriptf:
                 scriptf.write(srcenv)
                 scriptf.write('\n')
                 scriptf.write(commands)
             try:
                 return subprocess.check_output(["bash", "-c",
-                                                self.shell_path(scriptname)]).rstrip()
+                                                self.shell_path(scriptname)], universal_newlines=True).rstrip()
             finally:
                 os.remove(scriptname)
 
         def shell_path(self, path):
-            return subprocess.check_output(["cygpath", "-u", path]).rstrip()
+            return subprocess.check_output(["cygpath", "-u", path], universal_newlines=True).rstrip()
 
     def read_variables(self, *args):
         """
