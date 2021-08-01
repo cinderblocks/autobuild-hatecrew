@@ -40,15 +40,14 @@ import os.path
 # you (because you already have your package's dependencies installed), but it
 # will wreak havoc upon new users of your package, as they will not be able to
 # install your package without manually installing the dependencies first."
-def execfiiiile(filepath, globals=None, locals=None):
-    if globals is None:
-        globals = {}
-    globals.update({
-        "__file__": filepath,
-        "__name__": "__main__",
-    })
-    with open(filepath, 'rb') as file:
-        exec(compile(file.read(), filepath, 'exec'), globals, locals)
+def execfiiiile(filepath, globals, locals=None):
+    mode = 'rb'
+    with open(filename, mode) as stream:
+        script = stream.read()
+    if locals is None:
+        locals = globals
+    code = compile(script, filename, 'exec')
+    exec(code, globals, locals)
 
 execfiiiile(os.path.join("autobuild", "version.py"))
 # The previous execfile better have defined AUTOBUILD_VERSION_STRING!
