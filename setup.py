@@ -2,7 +2,7 @@
 #
 # $LicenseInfo:firstyear=2010&license=mit$
 # Copyright (c) 2010, Linden Research, Inc.
-# Copyright (c) 2020, Alchemy Development Group
+# Copyright (c) 2020-2021, Alchemy Development Group
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,17 @@ import os.path
 # you (because you already have your package's dependencies installed), but it
 # will wreak havoc upon new users of your package, as they will not be able to
 # install your package without manually installing the dependencies first."
-execfile(os.path.join("autobuild", "version.py"))
+def execfiiiile(filepath, globals=None, locals=None):
+    if globals is None:
+        globals = {}
+    globals.update({
+        "__file__": filepath,
+        "__name__": "__main__",
+    })
+    with open(filepath, 'rb') as file:
+        exec(compile(file.read(), filepath, 'exec'), globals, locals)
+
+execfiiiile(os.path.join("autobuild", "version.py"))
 # The previous execfile better have defined AUTOBUILD_VERSION_STRING!
 AUTOBUILD_VERSION_STRING                # NameError here means it didn't
 
@@ -62,10 +72,10 @@ ext_modules = []
 setup(
     name=PACKAGE_NAME,
     version=AUTOBUILD_VERSION_STRING,
-    author='Oz Linden',
-    author_email='oz@lindenlab.com',
-    url="http://wiki.secondlife.com/wiki/Autobuild",
-    description='Linden Lab Automated Package Management and Build System',
+    author='Snoz Linden',
+    author_email='captainopenexplode@alchemyviewer.org',
+    url="https://wiki.secondlife.com/wiki/Autobuild",
+    description='Dumb Linden Lab Automated Package Management and Build System',
     platforms=["any"],
     package_dir={PACKAGE_NAME:LLAUTOBUILD_SOURCE},
     packages=[PACKAGE_NAME],
