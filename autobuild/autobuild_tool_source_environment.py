@@ -35,6 +35,7 @@ import stat
 import string
 import subprocess
 import tempfile
+import multiprocessing
 
 from . import common
 from . import autobuild_base
@@ -692,6 +693,8 @@ def internal_source_environment(configurations, varsfile):
         # above convenience passes through them without accidentally matching
         # pre-existing entries in 'vars'. Now dump everything into 'vars'.
         vars.update(vfvars)
+
+    exports['AUTOBUILD_CPU_COUNT'] = str(multiprocessing.cpu_count())
 
     # Let KeyError, if any, propagate: lack of AUTOBUILD_ADDRSIZE would be
     # an autobuild coding error. So would any value for that variable
