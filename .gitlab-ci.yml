@@ -33,7 +33,7 @@ test:
   allow_failure: true
   script:
     - apt-get update && apt-get install -y -qq graphviz
-    - pip install pytest llbase pydot
+    - pip install pytest llbase pydot pyzstd
     - pytest --junitxml=pytest_report.xml
   artifacts:
     when: always
