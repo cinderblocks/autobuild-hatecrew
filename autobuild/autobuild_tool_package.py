@@ -406,19 +406,22 @@ def _print_hash(filename, results, results_dict):
     sha256 = common.compute_sha256(filename)
     sha3_256 = common.compute_sha3_256(filename)
     sha3_384 = common.compute_sha3_384(filename)
+    blake2b = common.compute_blake2b(filename)
 
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print("md5    %s" % md5)
-    print("sha256    %s" % sha256)
+    print("md5         %s" % md5)
+    print("sha256      %s" % sha256)
     print("sha3_256    %s" % sha3_256)
     print("sha3_384    %s" % sha3_384)
+    print("blake2b     %s" % blake2b)
     if results:
         results_dict["autobuild_package_md5"] = md5
         results_dict["autobuild_package_sha256"] = sha256
         results_dict["autobuild_package_sha3_256"] = sha3_256
         results_dict["autobuild_package_sha3_384"] = sha3_384
+        results_dict["autobuild_package_blake2b"] = blake2b
         json.dump(obj=results_dict, fp=results, sort_keys=True, indent=4, separators=(',', ': '))
 
     # Not using logging, since this output should be produced unconditionally on stdout

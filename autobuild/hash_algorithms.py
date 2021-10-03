@@ -104,3 +104,7 @@ def _verify_sha256(pathname, hash):
 @hash_algorithm("sha3_384")
 def _verify_sha256(pathname, hash):
     return common.compute_sha3_384(pathname) == hash
+
+@hash_algorithm("blake2b")
+def _verify_blake2b(pathname, hash):
+    return common.compute_blake2b(pathname) == hash

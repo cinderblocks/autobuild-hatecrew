@@ -389,8 +389,6 @@ def compute_sha3_256(path):
     Returns the SHA3_256 sum for the given file.
     """
     import hashlib
-    if sys.version_info < (3, 6):
-        import sha3
 
     try:
         stream = open(path, 'rb')
@@ -410,8 +408,6 @@ def compute_sha3_384(path):
     Returns the SHA3_256 sum for the given file.
     """
     import hashlib
-    if sys.version_info < (3, 6):
-        import sha3
 
     try:
         stream = open(path, 'rb')
@@ -420,6 +416,25 @@ def compute_sha3_384(path):
 
     try:
         hasher = hashlib.sha3_384(stream.read())
+    finally:
+        stream.close()
+
+    return hasher.hexdigest()
+
+
+def compute_blake2b(path):
+    """
+    Returns the blake2b sum for the given file.
+    """
+    import hashlib
+
+    try:
+        stream = open(path, 'rb')
+    except IOError as err:
+        raise AutobuildError("Can't compute blake2b for %s: %s" % (path, err))
+
+    try:
+        hasher = hashlib.blake2b(stream.read())
     finally:
         stream.close()
 
