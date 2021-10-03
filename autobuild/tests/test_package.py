@@ -105,18 +105,11 @@ class TestPackaging(BaseTest):
         except ImportError: # python 3
             from io import BytesIO as BIO
 
-        try:
-            import lzma
-        except ImportError:
-            from backports import lzma
+        if ".tar.zst" in tar:
+            tarball = common.ZstdTarFile(tar, 'r')
+        else:
+            tarball = tarfile.open(tar, 'r')
 
-        filedata = None
-        with lzma.open(tar, "r") as f:
-            filedata = f.read()
-            f.close()
-
-        file_in = BIO(filedata)
-        tarball = tarfile.open(fileobj=file_in, mode="r")
         packaged_files=tarball.getnames()
         packaged_files.sort()
         self.assertEqual(packaged_files, self.expected_files)
