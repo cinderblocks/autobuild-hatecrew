@@ -78,7 +78,7 @@ class TestPackaging(BaseTest):
         self.config = configfile.ConfigurationDescription(self.config_path)
         self.platform = 'common'
         self.tar_basename = os.path.join(self.data_dir, "test1-1.0-common-123456")
-        self.tar_name = self.tar_basename + ".tar.xz"
+        self.tar_name = self.tar_basename + ".tar.zst"
         self.zip_name = self.tar_basename + ".zip"
         self.expected_files=['include/file1','LICENSES/test1.txt','autobuild-package.xml']
         self.expected_files.sort()

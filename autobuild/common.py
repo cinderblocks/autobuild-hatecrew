@@ -47,6 +47,8 @@ import shutil
 import sys
 import tempfile
 import time
+import tarfile
+from pyzstd import ZstdFile
 
 from .version import AUTOBUILD_VERSION_STRING
 
@@ -624,3 +626,19 @@ def establish_build_id(build_id_arg):
     return str(build_id)
 
 
+class ZstdTarFile(tarfile.TarFile):
+    def __init__(self, name, mode='r', *, level_or_option=None, zstd_dict=None, **kwargs):
+        self.zstd_file = ZstdFile(name, mode,
+                                level_or_option=level_or_option,
+                                zstd_dict=zstd_dict)
+        try:
+            super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
+        except:
+            self.zstd_file.close()
+            raise
+
+    def close(self):
+        try:
+            super().close()
+        finally:
+            self.zstd_file.close()

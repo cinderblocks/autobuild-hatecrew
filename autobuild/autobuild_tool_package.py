@@ -91,7 +91,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         parser.add_argument('--archive-format',
                             default=None,
                             dest='archive_format',
-                            help='the format of the archive (txz, tgz, tbz2 or zip)')
+                            help='the format of the archive (tzst, txz, tgz, tbz2 or zip)')
         parser.add_argument('--build-dir',
                             default=None,
                             dest='select_dir',  # see common.select_directories()
@@ -259,7 +259,7 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     else:
         archive_description = platform_description.archive
         format = _determine_archive_format(archive_format, archive_description)
-        if format == 'txz' or format == 'tbz2' or format == 'tgz':
+        if format == 'txz' or format == 'tbz2' or format == 'tgz' or format == 'tzst':
             _create_tarfile(tarfilename, format, build_directory, files, results, results_dict)
         elif format == 'zip':
             _create_zip_archive(tarfilename + '.zip', build_directory, files, results, results_dict)
@@ -273,7 +273,7 @@ def _determine_archive_format(archive_format_argument, archive_description):
     if archive_format_argument is not None:
         return archive_format_argument
     elif archive_description is None or archive_description.format is None:
-        return 'txz'
+        return 'tzst'
     else:
         return archive_description.format
 
@@ -318,17 +318,26 @@ def _create_tarfile(tarfilename, format, build_directory, filelist, results, res
     try:
         if format == 'txz':
             tarfilename = tarfilename + '.tar.xz'
-            mode = 'w:xz'
+            tfile = tarfile.open(tarfilename, 'w:xz')
         elif format == 'tbz2':
             tarfilename = tarfilename + '.tar.bz2'
-            mode = 'w:bz2'
+            tfile = tarfile.open(tarfilename, 'w:bz2')
         elif format == 'tgz':
             tarfilename = tarfilename + '.tar.gz'
-            mode = 'w:gz'
+            tfile = tarfile.open(tarfilename, 'w:gz')
+        elif format == 'tzst':
+            tarfilename = tarfilename + '.tar.zst'
+
+            import multiprocessing
+            from pyzstd import CParameter
+            zstdoption = {CParameter.compressionLevel : 22,
+                    CParameter.nbWorkers : 4,
+                    CParameter.checksumFlag : 1}
+            
+            tfile = common.ZstdTarFile(tarfilename, 'w', level_or_option=zstdoption)
         else:
             raise PackageError("unknown tar archive format: %s" % format)
 
-        tfile = tarfile.open(tarfilename, mode)
         for file in filelist:
             try:
                 # Make sure permissions are set on Windows.
