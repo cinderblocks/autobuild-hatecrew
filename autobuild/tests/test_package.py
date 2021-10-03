@@ -131,7 +131,7 @@ class TestPackaging(BaseTest):
 
     def test_package(self):
         logger.setLevel(logging.DEBUG)
-        package.package(self.config, self.config.get_build_directory(None, 'common'), 'common', archive_format='txz')
+        package.package(self.config, self.config.get_build_directory(None, 'common'), 'common', archive_format='tzst')
         assert os.path.exists(self.tar_name), "%s does not exist" % self.tar_name
         self.tar_has_expected(self.tar_name)
 
@@ -140,7 +140,7 @@ class TestPackaging(BaseTest):
         logger.setLevel(logging.DEBUG)
         results_output=tempfile.mktemp()
         package.package(self.config, self.config.get_build_directory(None, 'common'), 
-                        'common', archive_format='txz', results_file=results_output)
+                        'common', archive_format='tzst', results_file=results_output)
         expected_results_regex = '''\
 {
     "autobuild_package_clean": "true",
@@ -171,7 +171,7 @@ $''' % (re.escape(os.path.basename(self.tar_name)), "[0-9a-f]{32}", re.escape(os
         metadata.package_description.version = "2.3"
         metadata.save()
         # okay, now use that to build package
-        package.package(self.config, build_directory, 'common', archive_format='txz')
+        package.package(self.config, build_directory, 'common', archive_format='tzst')
         # should have used updated package version in tarball name
         expected_tar_name = self.tar_name.replace("-1.0-", "-2.3-")
         if not os.path.exists(expected_tar_name):
