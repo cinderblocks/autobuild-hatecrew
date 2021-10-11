@@ -73,7 +73,7 @@ setup(
     scripts=[],
     license='MIT',
     classifiers=[line for line in CLASSIFIERS.split("\n") if line],
-    install_requires=['llbase', 'pydot', 'pyzstd'],
+    install_requires=['llbase>=1.2.11', 'pydot', 'pyzstd', 'certifi>=2021.10.8'],
     python_requires=">=3.6",
     #ext_modules=ext_modules,
     )

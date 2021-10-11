@@ -46,6 +46,7 @@ import subprocess
 import socket
 import itertools
 import codecs
+import certifi
 
 from . import common
 from . import configfile
@@ -260,7 +261,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
             logger.info("downloading %s:\n  %s\n     to %s" % (package_name, package_url, cache_file))
             try:
                 req = urllib.request.Request(package_url, None, headers)
-                package_response = urllib.request.urlopen(url=req, timeout=download_timeout_seconds)
+                package_response = urllib.request.urlopen(url=req, timeout=download_timeout_seconds, cafile=certifi.where())
             except urllib.error.URLError as err:
                 logger.error("error: %s\n  downloading package %s" % (err, package_url))
                 package_response = None
