@@ -29,9 +29,8 @@ import sys
 import tempfile
 import unittest
 from autobuild import autobuild_tool_source_environment as atse
-from basetest import *
-from nose.tools import *
-from patch import patch
+from .basetest import *
+from .patch import patch
 from pprint import pformat
 
 def assert_dict_has(d, key, value):
@@ -40,15 +39,15 @@ def assert_dict_has(d, key, value):
     except KeyError:
         raise AssertionError("key %s not in %s" % (key, pformat(d)))
     else:
-        assert_equals(dval, value)
+        self.assertEqual(dval, value)
 
 def assert_dict_subset(d, s):
     # Windows insists on capitalizing environment variables, so prepare a copy
     # of d with all-caps keys.
-    dupper = dict((k.upper(), v) for k, v in d.iteritems())
+    dupper = dict((k.upper(), v) for k, v in d.items())
     missing = []
     mismatch = []
-    for key, value in s.iteritems():
+    for key, value in s.items():
         try:
             dval = dupper[key.upper()]
         except KeyError:
@@ -106,7 +105,7 @@ class TestSourceEnvironment(BaseTest):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-        for var, value in self.restores.iteritems():
+        for var, value in self.restores.items():
             os.environ[var] = value
         for var in self.removes:
             # an individual test might or might not set var
@@ -128,7 +127,8 @@ class TestSourceEnvironment(BaseTest):
         if the child process terminates with nonzero rc.
         """
         autobuild = subprocess.Popen((self.autobuild_bin, "source_environment") + args,
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     universal_newlines=True)
         stdout, stderr = autobuild.communicate()
         rc = autobuild.wait()
         assert rc == 0, "%s source_environment terminated with %s:\n%s" % \
@@ -151,7 +151,7 @@ class TestSourceEnvironment(BaseTest):
     eval "$('%s' source_environment %s)"
     %s""" % (self.autobuild_bin,
              ' '.join("'%s'" % arg for arg in args),
-             commands)]).rstrip()
+             commands)], universal_newlines=True).rstrip()
 
         def shell_path(self, path):
             return path
@@ -174,18 +174,18 @@ class TestSourceEnvironment(BaseTest):
             srcenv = self.autobuild("source_environment", *args)
             scriptname = os.path.join(self.tempdir, "source_env_and.sh")
             # binary mode because '\r\n' confuses bash
-            with open(scriptname, "wb") as scriptf:
+            with open(scriptname, "w", newline='\n') as scriptf:
                 scriptf.write(srcenv)
                 scriptf.write('\n')
                 scriptf.write(commands)
             try:
                 return subprocess.check_output(["bash", "-c",
-                                                self.shell_path(scriptname)]).rstrip()
+                                                self.shell_path(scriptname)], universal_newlines=True).rstrip()
             finally:
                 os.remove(scriptname)
 
         def shell_path(self, path):
-            return subprocess.check_output(["cygpath", "-u", path]).rstrip()
+            return subprocess.check_output(["cygpath", "-u", path], universal_newlines=True).rstrip()
 
     def read_variables(self, *args):
         """
@@ -205,25 +205,25 @@ for var in $(set | grep '^[^ ]' | cut -s -d= -f 1)
 do export $var
 done
 '%s' -c 'import os, pprint
-pprint.pprint(os.environ)'""" % self.shell_path(sys.executable)))
+pprint.pprint(dict(os.environ))'""" % self.shell_path(sys.executable)))
         # filter out anything inherited from our own environment
-        for var, value in os.environ.iteritems():
+        for var, value in os.environ.items():
             if value == vars.get(var):
                 del vars[var]
         return vars
 
     def test_env(self):
-        assert 'environment_template' in dir(atse)
+        self.assertIn('environment_template', dir(atse))
 
     def test_remove_switch(self):
-        assert_equals(self.source_env_and([], """\
+        self.assertEqual(self.source_env_and([], """\
 switches='abc def ghi'
 remove_switch def $switches"""), "abc ghi")
 
     def test_replace_switch(self):
         # replace_switch makes no guarantees about the order in which the
         # switches are returned.
-        assert_equals(set(self.source_env_and([], """\
+        self.assertEqual(set(self.source_env_and([], """\
 switches='abc def ghi'
 replace_switch def xyz $switches""").split()),
                       set(["abc", "xyz", "ghi"]))
@@ -232,9 +232,9 @@ replace_switch def xyz $switches""").split()),
         # autobuild source_environment with no arg
         stdout, stderr = self.autobuild_outputs()
         # ensure that autobuild produced a warning
-        assert_in("no build variables", stderr)
+        self.assertIn("no build variables", stderr)
         # but emitted normal output anyway
-        assert_in("set_build_variables", stdout)
+        self.assertIn("set_build_variables", stdout)
 
     def find_data(self, filename):
         return os.path.join(os.path.dirname(__file__), "data", filename)
@@ -244,16 +244,16 @@ replace_switch def xyz $switches""").split()),
         stdout, stderr = self.autobuild_outputs(self.find_data("empty"))
         # This also verifies that source_environment doesn't produce errors
         # when handed an empty script file.
-        assert_equals(stderr, "")
+        self.assertEqual(stderr, "")
 
     def test_var_no_warning(self):
         os.environ["AUTOBUILD_VARIABLES_FILE"] = self.find_data("empty")
         # autobuild source_environment with no arg but AUTOBUILD_VARIABLES_FILE
         stdout, stderr = self.autobuild_outputs()
-        assert_equals(stderr, "")
+        self.assertEqual(stderr, "")
 
     def test_no_MAKEFLAGS(self):
-        assert_not_in("MAKEFLAGS", self.autobuild_outputs()[0])
+        self.assertNotIn("MAKEFLAGS", self.autobuild_outputs()[0])
 
     def test_no_file_error(self):
         with exc(atse.SourceEnvError, "can't read.*nonexistent"):
@@ -320,8 +320,8 @@ replace_switch def xyz $switches""").split()),
         finally:
             atse.logger.removeHandler(handler)
         stderr = stream.getvalue()
-        assert_in("platform", stderr)
-        assert_in("strange", stderr)
+        self.assertIn("platform", stderr)
+        self.assertIn("strange", stderr)
 
     def test_config_shorthand(self):
         with patch(sys, "platform", "darwin"), CaptureStdout() as stdout:

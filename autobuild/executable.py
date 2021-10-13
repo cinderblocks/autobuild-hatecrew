@@ -33,7 +33,7 @@ import sys
 import subprocess
 import re
 
-import common
+from . import common
 import logging
 
 logger = logging.getLogger('autobuild.executable')
@@ -83,7 +83,7 @@ class Executable(common.Serialized):
             # might vary by platform. While we believe os.environ is a
             # case-insensitive dict, we can't be sure that the passed
             # 'environment' is necessarily such a dict.
-            pathkey = [k for k in environment.iterkeys() if k.upper() == "PATH"]
+            pathkey = [k for k in environment.keys() if k.upper() == "PATH"]
             # If we can't find any such key, don't blow up, just don't replace
             # prog.
             if pathkey:
@@ -105,20 +105,20 @@ class Executable(common.Serialized):
         else:
             # have to filter, so run stdout through a pipe
             process = subprocess.Popen(commandlist, env=environment,
-                                       stdout=subprocess.PIPE)
+                                       stdout=subprocess.PIPE, universal_newlines=True)
             filters_re = [re.compile(filter, re.MULTILINE) for filter in filters]
             for line in process.stdout:
                 if any(regex.search(line) for regex in filters_re):
                     continue
                 line = line.replace("\r\n", "\n")
                 line = line.replace("\r", "\n")
-                print line,  # Trailing , prevents an extra newline
+                print(line, end=' ')
             return process.wait()
 
     def show_command(self, commandlist, filters):
         showcmd=" '%s'" % "' '".join(commandlist)
         showfilter="\n| filter (%s)" % "|".join(filters) if filters else ""
-        print "%s%s" % (showcmd, showfilter)
+        print("%s%s" % (showcmd, showfilter))
         sys.stdout.flush()
 
     def __str__(self, options=[]):

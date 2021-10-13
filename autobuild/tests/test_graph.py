@@ -31,6 +31,7 @@ $/LicenseInfo$
 import os
 import logging
 import tempfile
+import unittest
 
 try:
     # in case graphviz not installed
@@ -39,14 +40,10 @@ except ImportError:
     # in case pydot not installed!
     InvocationException = None
 
-from unittest import TestCase
-from nose.tools import *                # assert_equals() et al.
-from nose.plugins.skip import SkipTest
-
 #from autobuild.autobuild_main import Autobuild
 import autobuild.common as common
 import autobuild.autobuild_tool_graph as graph
-from basetest import *
+from .basetest import *
 
 logger = logging.getLogger("test_graph")
 
@@ -93,13 +90,13 @@ class TestGraph(BaseTest):
             output_lines = stream.getvalue().splitlines()
         assert_found_in("label=\"bongo dependencies for ", output_lines) # omit platform
         assert_found_in("bingo \\[", output_lines)
-        assert_in("bingo -> bongo;", output_lines)
+        self.assertIn("bingo -> bongo;", output_lines)
 
     def test_output(self):
         if InvocationException is None:
             # If we don't even have pydot installed, this test is pretty
             # pointless.
-            raise SkipTest("pydot not installed, skipping")
+            raise unittest.SkipTest("pydot not installed, skipping")
         self.tmp_dir = tempfile.mkdtemp()
         try:
             self.options.graph_file = os.path.join(self.tmp_dir, "graph.png")
@@ -109,7 +106,7 @@ class TestGraph(BaseTest):
                 graph.AutobuildTool().run(self.options)
             except InvocationException as err:
                 # don't require that graphviz be installed to pass unit tests
-                raise SkipTest(str(err))
+                raise unittest.SkipTest(str(err))
             # for now, settle for detecting that the png file was created
             assert os.path.exists(self.options.graph_file)
             assert os.path.exists(self.options.dot_file)

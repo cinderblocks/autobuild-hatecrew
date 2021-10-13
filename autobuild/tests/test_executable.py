@@ -22,9 +22,8 @@
 
 import sys
 import unittest
-from nose.plugins.skip import SkipTest
 from autobuild.executable import Executable
-from basetest import BaseTest
+from .basetest import BaseTest
 
 class TestExecutable(BaseTest):
     def setUp(self):
@@ -45,7 +44,7 @@ class TestExecutable(BaseTest):
         assert otherChildExecutable.get_arguments() == ['foo','.']
         # On Windows, you can't count on grep or egrep.
         if sys.platform.startswith("win"):
-            raise SkipTest("On Windows, can't count on finding grep")
+            raise unittest.SkipTest("On Windows, can't count on finding grep")
         result = childExecutable()
         assert result == 0, "%s => %s" % (childExecutable._get_all_arguments([]), result)
         result = parentExecutable()

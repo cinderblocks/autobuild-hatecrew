@@ -51,15 +51,15 @@ import tarfile
 import getpass
 import glob
 import subprocess
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import re
 from zipfile import ZipFile, ZIP_DEFLATED
 
-import common
+from . import common
 import logging
-import configfile
-import autobuild_base
-from common import AutobuildError
+from . import configfile
+from . import autobuild_base
+from .common import AutobuildError
 
 logger = logging.getLogger('autobuild.package')
 
@@ -91,7 +91,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         parser.add_argument('--archive-format',
                             default=None,
                             dest='archive_format',
-                            help='the format of the archive (txz, tgz, tbz2 or zip)')
+                            help='the format of the archive (tzst, txz, tgz, tbz2 or zip)')
         parser.add_argument('--build-dir',
                             default=None,
                             dest='select_dir',  # see common.select_directories()
@@ -223,14 +223,14 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print "packing %s" % package_description.name
+    print("packing %s" % package_description.name)
 
     results = None
     results_dict = None
     if not dry_run:
         if results_file:
             try:
-                results=open(results_file,'wb')
+                results=open(results_file,'w')
             except IOError as err:
                 raise PackageError("Unable to open results file %s:\n%s" % (results_file, err))
             
@@ -259,7 +259,7 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     else:
         archive_description = platform_description.archive
         format = _determine_archive_format(archive_format, archive_description)
-        if format == 'txz' or format == 'tbz2' or format == 'tgz':
+        if format == 'txz' or format == 'tbz2' or format == 'tgz' or format == 'tzst':
             _create_tarfile(tarfilename, format, build_directory, files, results, results_dict)
         elif format == 'zip':
             _create_zip_archive(tarfilename + '.zip', build_directory, files, results, results_dict)
@@ -273,7 +273,7 @@ def _determine_archive_format(archive_format_argument, archive_description):
     if archive_format_argument is not None:
         return archive_format_argument
     elif archive_description is None or archive_description.format is None:
-        return 'txz'
+        return 'tzst'
     else:
         return archive_description.format
 
@@ -316,64 +316,52 @@ def _create_tarfile(tarfilename, format, build_directory, filelist, results, res
     current_directory = os.getcwd()
     os.chdir(build_directory)
     try:
-        from cStringIO import StringIO as BIO
-    except ImportError: # python 3
-        from io import BytesIO as BIO
+        if format == 'txz':
+            tarfilename = tarfilename + '.tar.xz'
+            tfile = tarfile.open(tarfilename, 'w:xz')
+        elif format == 'tbz2':
+            tarfilename = tarfilename + '.tar.bz2'
+            tfile = tarfile.open(tarfilename, 'w:bz2')
+        elif format == 'tgz':
+            tarfilename = tarfilename + '.tar.gz'
+            tfile = tarfile.open(tarfilename, 'w:gz')
+        elif format == 'tzst':
+            tarfilename = tarfilename + '.tar.zst'
 
-    if format == 'txz':
-        tarfilename = tarfilename + '.tar.xz'
-    elif format == 'tbz2':
-        tarfilename = tarfilename + '.tar.bz2'
-    elif format == 'tgz':
-        tarfilename = tarfilename + '.tar.gz'
-    else:
-        raise PackageError("unknown tar archive format: %s" % format)
+            import multiprocessing
+            from pyzstd import CParameter
+            zstdoption = {CParameter.compressionLevel : 22,
+                    CParameter.nbWorkers : 4,
+                    CParameter.checksumFlag : 1}
+            
+            tfile = common.ZstdTarFile(tarfilename, 'w', level_or_option=zstdoption)
+        else:
+            raise PackageError("unknown tar archive format: %s" % format)
 
-    try:
-        file_out = BIO()
-        tfile = tarfile.open(fileobj = file_out, mode = 'w')
         for file in filelist:
             try:
                 # Make sure permissions are set on Windows.
                 if common.is_system_windows():
                     command = ["CACLS", file, "/T", "/G", getpass.getuser() + ":F"]
-                    CACLS = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    CACLS = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT, universal_newlines=True)
                     output = CACLS.communicate("Y")[0]
                     rc = CACLS.wait()
                     if rc != 0:
-                        print "error: rc %s from %s:" % (rc, ' '.join(command))
-                    print output
+                        print("error: rc %s from %s:" % (rc, ' '.join(command)))
+                    print(output)
                 tfile.add(file)
                 logger.info('added ' + file)
             except (tarfile.TarError, IOError, OSError) as err:
                 # Apparently you can get any of the above if the specified filename can't be opened
                 raise PackageError("unable to add %s to %s: %s" % (file, tarfilename, err))
         tfile.close()
-
-        if format == 'txz':
-            try:
-                import lzma
-            except ImportError:
-                from backports import lzma
-            with lzma.open(filename=tarfilename, mode="w", preset=9|lzma.PRESET_EXTREME) as f:
-                f.write(file_out.getvalue())
-                f.close()
-        elif format == 'tbz2':
-            import bz2
-            with bz2.BZ2File(tarfilename, "w") as f:
-                f.write(file_out.getvalue())
-                f.close()
-        elif format == 'tgz':
-            import gzip
-            with gzip.open(tarfilename, "w") as f:
-                f.write(file_out.getvalue())
-                f.close()
     finally:
         os.chdir(current_directory)
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print "wrote  %s" % tarfilename
+    print("wrote  %s" % tarfilename)
     if results:
         results_dict["autobuild_package_filename"] = os.path.basename(tarfilename)
     _print_hash(tarfilename, results, results_dict)
@@ -395,7 +383,7 @@ def _create_zip_archive(archive_filename, build_directory, file_list, results, r
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print "wrote  %s" % archive_filename
+    print("wrote  %s" % archive_filename)
     if results:
         results.write('autobuild_package_filename="%s"\n' % archive_filename)
     _print_hash(archive_filename, results, results_dict)
@@ -427,19 +415,22 @@ def _print_hash(filename, results, results_dict):
     sha256 = common.compute_sha256(filename)
     sha3_256 = common.compute_sha3_256(filename)
     sha3_384 = common.compute_sha3_384(filename)
+    blake2b = common.compute_blake2b(filename)
 
     # printing unconditionally on stdout for backward compatibility
     # the Linden Lab build scripts no longer rely on this
     # (they use the --results-file option instead)
-    print "md5    %s" % md5
-    print "sha256    %s" % sha256
-    print "sha3_256    %s" % sha3_256
-    print "sha3_384    %s" % sha3_384
+    print("md5         %s" % md5)
+    print("sha256      %s" % sha256)
+    print("sha3_256    %s" % sha3_256)
+    print("sha3_384    %s" % sha3_384)
+    print("blake2b     %s" % blake2b)
     if results:
         results_dict["autobuild_package_md5"] = md5
         results_dict["autobuild_package_sha256"] = sha256
         results_dict["autobuild_package_sha3_256"] = sha3_256
         results_dict["autobuild_package_sha3_384"] = sha3_384
+        results_dict["autobuild_package_blake2b"] = blake2b
         json.dump(obj=results_dict, fp=results, sort_keys=True, indent=4, separators=(',', ': '))
 
     # Not using logging, since this output should be produced unconditionally on stdout

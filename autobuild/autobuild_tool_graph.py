@@ -44,7 +44,7 @@ except ImportError:
     # will fail. But we don't want a spurious test failure showing up; just skip
     # that test.
     try:
-        from nose.plugins.skip import SkipTest
+        from unittest import SkipTest
     except ImportError:
         # whoops, user machine, it's a real problem: use real ImportError
         SkipTest = ImportError
@@ -54,11 +54,12 @@ except ImportError:
 
 import webbrowser
 
-import common
+from . import common
 import logging
-import configfile
-import autobuild_base
-from autobuild_tool_install import extract_metadata_from_package
+from . import configfile
+from . import autobuild_base
+from .autobuild_tool_install import extract_metadata_from_package
+from .autobuild_tool_source_environment import get_enriched_environment
 
 logger = logging.getLogger('autobuild.graph')
 
@@ -98,7 +99,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             default=configfile.AUTOBUILD_CONFIG_FILE,
                             help="The file used to describe what should be installed and built\n  (defaults to $AUTOBUILD_CONFIG_FILE or \"autobuild.xml\").")
         parser.add_argument('--configuration', '-c', 
-                            dest='configuration',
+                            dest='configurations',
                             help="specify build configuration\n(may be specified in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
@@ -134,12 +135,15 @@ class AutobuildTool(autobuild_base.AutobuildBase):
             logger.info("searching for metadata in the current build tree")
             config_filename = args.config_filename
             config = configfile.ConfigurationDescription(config_filename)
-            metadata_file = os.path.join(config.get_build_directory(args.configuration, platform), configfile.PACKAGE_METADATA_FILE)
+            environment = get_enriched_environment(args.configurations)
+            # and expand its $variables according to the environment.
+            config.expand_platform_vars(environment)
+
+            metadata_file = os.path.join(config.get_build_directory(args.configurations, platform), configfile.PACKAGE_METADATA_FILE)
             if not os.path.exists(metadata_file):
                 logger.warning("No complete metadata file found; attempting to use partial data from installed files")
                 # get the absolute path to the installed-packages.xml file
                 args.all = False
-                args.configurations = args.configuration
                 install_dirs = common.select_directories(args, config, "install", "getting installed packages",
                                                          lambda cnf:
                                                          os.path.join(config.get_build_directory(cnf, platform), "packages"))
@@ -202,7 +206,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                         pkg_node.set_style('dashed')
                     graph.add_node(pkg_node)
                     if 'dependencies' in pkg:
-                        for dep_pkg in pkg['dependencies'].itervalues():
+                        for dep_pkg in pkg['dependencies'].values():
                             dep_name = dep_pkg['package_description']['name']
                             dep_node = add_depends(graph, dep_pkg)
                             logger.debug(" graph adding dependency %s -> %s" % (dep_name, name))
@@ -218,7 +222,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
 
             if args.dot_file:
                 try:
-                    dot_file=open(args.dot_file,'wb')
+                    dot_file=open(args.dot_file,'w')
                 except IOError as err:
                     raise GraphError("Unable to open dot file %s: %s" % (args.dot_file, err))
                 dot_file.write(graph.to_string())
@@ -230,13 +234,13 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                 else:
                     graph_file = os.path.join(tempfile.gettempdir(), 
                                               metadata['package_description']['name'] + "_graph_" 
-                                              + args.graph_type + '.png')
+                                              + args.graph_type + '.svg')
                 logger.info("writing %s" % graph_file)
-                graph.write_png(graph_file, prog=args.graph_type)
+                graph.write_svg(graph_file, prog=args.graph_type)
                 if args.display and not args.graph_file:
                     webbrowser.open('file:'+graph_file)
             else:
-                print "%s" % graph.to_string()
+                print("%s" % graph.to_string())
 
         else:
             raise GraphError("No metadata found")

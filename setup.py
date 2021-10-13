@@ -40,18 +40,8 @@ import os.path
 # you (because you already have your package's dependencies installed), but it
 # will wreak havoc upon new users of your package, as they will not be able to
 # install your package without manually installing the dependencies first."
-def execfiiiile(filepath, globals=None, locals=None):
-    if globals is None:
-        globals = {}
-    globals.update({
-        "__file__": filepath,
-        "__name__": "__main__",
-    })
-    with open(filepath, 'rb') as file:
-        exec(compile(file.read(), filepath, 'exec'), globals, locals)
-
-execfiiiile(os.path.join("autobuild", "version.py"))
-# The previous execfile better have defined AUTOBUILD_VERSION_STRING!
+exec(open(os.path.join('autobuild', 'version.py'), 'rb').read())
+# The previous exec better have defined AUTOBUILD_VERSION_STRING!
 AUTOBUILD_VERSION_STRING                # NameError here means it didn't
 
 PACKAGE_NAME = 'autobuild'
@@ -72,23 +62,18 @@ ext_modules = []
 setup(
     name=PACKAGE_NAME,
     version=AUTOBUILD_VERSION_STRING,
-    author='Snoz Linden',
-    author_email='captainopenexplode@alchemyviewer.org',
-    url="https://wiki.secondlife.com/wiki/Autobuild",
-    description='Dumb Linden Lab Automated Package Management and Build System',
+    author='Oz Linden',
+    author_email='oz@lindenlab.com',
+    url="http://wiki.secondlife.com/wiki/Autobuild",
+    description='Linden Lab Automated Package Management and Build System',
     platforms=["any"],
     package_dir={PACKAGE_NAME:LLAUTOBUILD_SOURCE},
     packages=[PACKAGE_NAME],
     entry_points=dict(console_scripts=['autobuild=autobuild.autobuild_main:main']),
     scripts=[],
     license='MIT',
-    classifiers=filter(None, CLASSIFIERS.split("\n")),
-    # argparse is specifically for Python 2.6 compatibility. If/when we drop
-    # Python 2.6 support, the conditional argparse item can be removed from
-    # install_requires: it's bundled with Python 2.7+.
-    install_requires=['llbase', 'pydot', ] + \
-                     (['backports.lzma'] if sys.version_info[:2] < (3, 3) else []) + \
-                     (['pysha3'] if sys.version_info[:2] < (3, 6) else []) + \
-                     (['argparse'] if sys.version_info[:2] < (2, 7) else []),
+    classifiers=[line for line in CLASSIFIERS.split("\n") if line],
+    install_requires=['llbase>=1.2.11', 'pydot', 'pyzstd', 'certifi>=2021.10.8'],
+    python_requires=">=3.6",
     #ext_modules=ext_modules,
     )

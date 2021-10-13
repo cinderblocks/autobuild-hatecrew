@@ -37,7 +37,7 @@ from string import Template
 import autobuild.autobuild_tool_package as package
 from autobuild import configfile
 from autobuild import common
-from basetest import BaseTest, ExpectError, CaptureStdout, clean_dir, clean_file
+from .basetest import BaseTest, ExpectError, CaptureStdout, clean_dir, clean_file
         
 
 # ****************************************************************************
@@ -78,7 +78,7 @@ class TestPackaging(BaseTest):
         self.config = configfile.ConfigurationDescription(self.config_path)
         self.platform = 'common'
         self.tar_basename = os.path.join(self.data_dir, "test1-1.0-common-123456")
-        self.tar_name = self.tar_basename + ".tar.xz"
+        self.tar_name = self.tar_basename + ".tar.zst"
         self.zip_name = self.tar_basename + ".zip"
         self.expected_files=['include/file1','LICENSES/test1.txt','autobuild-package.xml']
         self.expected_files.sort()
@@ -105,43 +105,35 @@ class TestPackaging(BaseTest):
         except ImportError: # python 3
             from io import BytesIO as BIO
 
-        try:
-            import lzma
-        except ImportError:
-            from backports import lzma
+        if ".tar.zst" in tar:
+            tarball = common.ZstdTarFile(tar, 'r')
+        else:
+            tarball = tarfile.open(tar, 'r')
 
-        filedata = None
-        with lzma.open(tar, "r") as f:
-            filedata = f.read()
-            f.close()
-
-        file_in = BIO(filedata)
-        tarball = tarfile.open(fileobj=file_in, mode="r")
         packaged_files=tarball.getnames()
         packaged_files.sort()
-        self.assertEquals(packaged_files, self.expected_files)
+        self.assertEqual(packaged_files, self.expected_files)
         tarball.close()
 
     def zip_has_expected(self,zip):
         zip_file = ZipFile(zip,'r')
         packaged_files=zip_file.namelist()
         packaged_files.sort()
-        self.assertEquals(packaged_files, self.expected_files)
+        self.assertEqual(packaged_files, self.expected_files)
         zip_file.close()
 
     def test_package(self):
         logger.setLevel(logging.DEBUG)
-        package.package(self.config, self.config.get_build_directory(None, 'common'), 'common', archive_format='txz')
+        package.package(self.config, self.config.get_build_directory(None, 'common'), 'common', archive_format='tzst')
         assert os.path.exists(self.tar_name), "%s does not exist" % self.tar_name
         self.tar_has_expected(self.tar_name)
 
     def test_results(self):
-        from nose.plugins.skip import SkipTest
-        raise SkipTest("pydot not installed, skipping")
+        raise unittest.SkipTest("This test is extremely flakey")
         logger.setLevel(logging.DEBUG)
         results_output=tempfile.mktemp()
         package.package(self.config, self.config.get_build_directory(None, 'common'), 
-                        'common', archive_format='txz', results_file=results_output)
+                        'common', archive_format='tzst', results_file=results_output)
         expected_results_regex = '''\
 {
     "autobuild_package_clean": "true",
@@ -172,7 +164,7 @@ $''' % (re.escape(os.path.basename(self.tar_name)), "[0-9a-f]{32}", re.escape(os
         metadata.package_description.version = "2.3"
         metadata.save()
         # okay, now use that to build package
-        package.package(self.config, build_directory, 'common', archive_format='txz')
+        package.package(self.config, build_directory, 'common', archive_format='tzst')
         # should have used updated package version in tarball name
         expected_tar_name = self.tar_name.replace("-1.0-", "-2.3-")
         if not os.path.exists(expected_tar_name):
@@ -245,7 +237,7 @@ $''' % (re.escape(os.path.basename(self.tar_name)), "[0-9a-f]{32}", re.escape(os
                                 ,platform_config
                                 ,{'PLATFORM':self.platform})
         self.options.autobuild_filename = platform_config
-        with ExpectError("No files matched manifest specifiers:\n"+'\n'.join(["missing/\*.txt","not_there.txt"]),
+        with ExpectError("No files matched manifest specifiers:\n"+'\n'.join(["missing/\\*.txt","not_there.txt"]),
                          "Missing files not detected"):
             package.AutobuildTool().run(self.options)
 

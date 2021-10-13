@@ -47,8 +47,10 @@ import shutil
 import sys
 import tempfile
 import time
+import tarfile
+from pyzstd import ZstdFile
 
-from version import AUTOBUILD_VERSION_STRING
+from .version import AUTOBUILD_VERSION_STRING
 
 logger = logging.getLogger('autobuild.common')
 
@@ -125,7 +127,7 @@ def is_system_64bit():
     """
     Returns True if the build system is 64-bit compatible.
     """
-    return platform.machine().lower() in ("x86_64", "amd64")
+    return platform.machine().lower() in ("x86_64", "amd64", "arm64")
 
 def is_system_windows():
     # Note that Python has a commitment to the value "win32" even for 64-bit
@@ -141,7 +143,7 @@ def check_platform_system_match(platform):
         if not is_system_windows():
             platform_should_be="Windows"
     elif platform in (PLATFORM_LINUX, PLATFORM_LINUX64):
-        if sys.platform != 'linux2':
+        if not sys.platform.startswith('linux'):
             platform_should_be="Linux"
     elif platform in (PLATFORM_DARWIN, PLATFORM_DARWIN64):
         if sys.platform != 'darwin':
@@ -172,7 +174,7 @@ def establish_platform(specified_platform=None, addrsize=DEFAULT_ADDRSIZE):
             Platform = PLATFORM_DARWIN64
         else:
             Platform = PLATFORM_DARWIN
-    elif sys.platform == 'linux2':
+    elif sys.platform.startswith('linux'):
         if addrsize == 64:
             Platform = PLATFORM_LINUX64
         else:
@@ -242,7 +244,7 @@ def get_install_cache_dir():
         cache = get_temp_dir("install.cache")
     else:
         if not os.path.exists(cache):
-            os.makedirs(cache, mode=0755)
+            os.makedirs(cache, mode=0o755)
     return cache
 
 
@@ -259,7 +261,7 @@ def get_temp_dir(basename):
     else:
         tmpdir = "/var/tmp/%s/%s" % (user, basename)
     if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, mode=0755)
+        os.makedirs(tmpdir, mode=0o755)
     return tmpdir
 
 
@@ -312,7 +314,7 @@ def find_executable(executables, exts=None, path=None):
     path should either be None (search os.environ['PATH']) or a sequence of
     directory names to be searched in order.
     """
-    if isinstance(executables, basestring):
+    if isinstance(executables, str):
         executables = [executables]
     if exts is None:
         exts = sys.platform.startswith("win") and [".com", ".exe", ".bat", ".cmd"] or []
@@ -350,7 +352,7 @@ def compute_md5(path):
     """
     Returns the MD5 sum for the given file.
     """
-    import hashlib
+    from hashlib import md5
 
     try:
         stream = open(path, 'rb')
@@ -358,7 +360,7 @@ def compute_md5(path):
         raise AutobuildError("Can't compute MD5 for %s: %s" % (path, err))
 
     try:
-        hasher = hashlib.md5(stream.read())
+        hasher = md5(stream.read())
     finally:
         stream.close()
 
@@ -389,8 +391,6 @@ def compute_sha3_256(path):
     Returns the SHA3_256 sum for the given file.
     """
     import hashlib
-    if sys.version_info < (3, 6):
-        import sha3
 
     try:
         stream = open(path, 'rb')
@@ -410,8 +410,6 @@ def compute_sha3_384(path):
     Returns the SHA3_256 sum for the given file.
     """
     import hashlib
-    if sys.version_info < (3, 6):
-        import sha3
 
     try:
         stream = open(path, 'rb')
@@ -420,6 +418,25 @@ def compute_sha3_384(path):
 
     try:
         hasher = hashlib.sha3_384(stream.read())
+    finally:
+        stream.close()
+
+    return hasher.hexdigest()
+
+
+def compute_blake2b(path):
+    """
+    Returns the blake2b sum for the given file.
+    """
+    import hashlib
+
+    try:
+        stream = open(path, 'rb')
+    except IOError as err:
+        raise AutobuildError("Can't compute blake2b for %s: %s" % (path, err))
+
+    try:
+        hasher = hashlib.blake2b(stream.read())
     finally:
         stream.close()
 
@@ -602,10 +619,26 @@ def establish_build_id(build_id_arg):
         # construct a timestamp that will fit into a signed 32 bit integer:
         #   <two digit year><three digit day of year><two digit hour><two digit minute>
         build_id = time.strftime("%y%j%H%M", time.gmtime())
-        logger.warn("Warning: no --id argument or AUTOBUILD_BUILD_ID environment variable specified;\n    using a value from the UTC date and time (%s), which may not be unique" % build_id)
+        logger.warning("Warning: no --id argument or AUTOBUILD_BUILD_ID environment variable specified;\n    using a value from the UTC date and time (%s), which may not be unique" % build_id)
 
     logger.debug("Build id %s" % build_id)
     os.environ['AUTOBUILD_BUILD_ID'] = str(build_id)
     return str(build_id)
 
 
+class ZstdTarFile(tarfile.TarFile):
+    def __init__(self, name, mode='r', *, level_or_option=None, zstd_dict=None, **kwargs):
+        self.zstd_file = ZstdFile(name, mode,
+                                level_or_option=level_or_option,
+                                zstd_dict=zstd_dict)
+        try:
+            super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
+        except:
+            self.zstd_file.close()
+            raise
+
+    def close(self):
+        try:
+            super().close()
+        finally:
+            self.zstd_file.close()
