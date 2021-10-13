@@ -145,7 +145,9 @@ def load_vsvars(vsver):
     # Did VS 2015 still adhere to the VS140COMNTOOLS convention? Adjust the
     # comparison here as necessary.
     if int(vsver) >= 150:
-        if int(vsver) >= 160:
+        if int(vsver) >= 170:
+            vs_ver_nextver = "18.0"
+        elif int(vsver) >= 160:
             vs_ver_nextver = "17.0"
         else:
             vs_ver_nextver = "16.0"
@@ -755,6 +757,7 @@ def internal_source_environment(configurations, varsfile):
                     '140': "Visual Studio 14 2015",
                     '150': "Visual Studio 15 2017",
                     '160': "Visual Studio 16 2019",
+                    '170': "Visual Studio 17 2022",
                     }[vsver]
             except KeyError:
                 # We don't have a specific mapping for this value of vsver. Take
