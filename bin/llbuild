@@ -31,7 +31,7 @@ import os
 
 try:
     from build import main
-except ImportError, excp:
+except ImportError as excp:
     # we're in a dev sandbox (not installed), so append dirname(argv[0])/.. to
     # the module path
     script_path = os.path.dirname(os.path.abspath(__file__))
@@ -42,8 +42,8 @@ from autobuild.common import AutobuildError
 if __name__ == "__main__":
     try:
         sys.exit(main(sys.argv[1:]))
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         sys.exit("Aborted...")
-    except AutobuildError, e:
+    except AutobuildError as e:
         sys.exit("ERROR: %s" % e)
 

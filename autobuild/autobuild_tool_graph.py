@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # $LicenseInfo:firstyear=2014&license=mit$
 # Copyright (c) 2014, Linden Research, Inc.
+# Copyright (c) 2022, Alchemy Developmeent Poop
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +32,7 @@ Author : Scott Lawrence / Logan Dethrow
 Date   : 2014-05-09
 """
 
+import io
 import os
 import sys
 import tempfile
@@ -222,7 +224,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
 
             if args.dot_file:
                 try:
-                    dot_file=open(args.dot_file,'w')
+                    dot_file=io.open(args.dot_file,'w', encoding="utf-8")
                 except IOError as err:
                     raise GraphError("Unable to open dot file %s: %s" % (args.dot_file, err))
                 dot_file.write(graph.to_string())

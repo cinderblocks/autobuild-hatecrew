@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # $LicenseInfo:firstyear=2010&license=mit$
 # Copyright (c) 2010, Linden Research, Inc.
-# Copyright (c) 2020, Alchemy Development Group
+# Copyright (c) 2020-2022, Alchemy Development Group
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,7 @@ Author : Martin Reddy
 Date   : 2010-04-19
 """
 
+import io
 import os
 import sys
 import errno
