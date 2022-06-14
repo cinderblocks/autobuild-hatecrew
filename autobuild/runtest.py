@@ -28,14 +28,15 @@ import os
 import argparse
 import unittest
 
-sys.path.append(os.getcwd() + '/../')       # for autobuild scripts
-sys.path.append(os.getcwd() + '/tests/')    # for test suites
+sys.path.append(os.getcwd() + '/../')  # for autobuild scripts
+sys.path.append(os.getcwd() + '/tests/')  # for test suites
 
 
 class text_colours:
     warning = '\033[91m'
     title = '\033[92m'
     end = '\033[0m'
+
 
 # global lists of files, all testable files, those to skip and alternatively those to run
 main_test_list = []
@@ -47,8 +48,8 @@ main_test_run_list = []
 def find_all_tests():
     all_files = os.listdir('.')
     for file_name in all_files:
-        if(file_name.endswith('.py') and
-           file_name != '__init__.py'):
+        if (file_name.endswith('.py') and
+                file_name != '__init__.py'):
             test_file_name = './tests/test_' + file_name
             if os.path.isfile(test_file_name):
                 module_name = file_name[:-3]
@@ -65,7 +66,8 @@ def run_list_of_tests(list, list_to_skip):
             print((text_colours.title + 'Skipping %r' + text_colours.end) % test_name)
         else:
             test_file = 'test_' + test_name
-            print((text_colours.title + 'Running tests for %r in module %r...' + text_colours.end) % (test_name, test_file))
+            print((text_colours.title + 'Running tests for %r in module %r...' + text_colours.end) % (
+                test_name, test_file))
             test_suite = __import__(test_file, globals(), locals(), [], -1)
             suite = unittest.TestLoader().loadTestsFromModule(test_suite)
             unittest.TextTestRunner(verbosity=2).run(suite)
@@ -93,6 +95,7 @@ class run_all_tests(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         find_all_tests()
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
@@ -100,8 +103,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
 
-#-------------------------
-# simple version:
+    # -------------------------
+    # simple version:
 
     parser.add_argument(
         '--RunTests', action=add_run_tests, nargs='+',
@@ -115,34 +118,34 @@ if __name__ == '__main__':
 
     find_all_tests()
 
-#-------------------------
-# subcommand version:
+    # -------------------------
+    # subcommand version:
 
-#   subparsers = parser.add_subparsers(title='Sub Commands',
-#                   description='Valid Sub Commands',
-#                   help='Sub Command help')
-#
-#   parser_testlists = subparsers.add_parser('RunTests',
-#       help='Provide lists of source files to test or skip');
-#   
-#   parser_testlists.add_argument(
-#        '--SkipList', action=add_run_tests, nargs='+',
-#        help='Run a list of unit tests'
-#             '(default: run them all)')
-#
-#   parser_testlists.add_argument(
-#        '--RunList', action=add_skip_tests, nargs='+',
-#        help='Skip a list of unit tests'
-#             '(default: run them all)')
-#
-#   parser_testlists.set_defaults(func=find_all_tests)
+    #   subparsers = parser.add_subparsers(title='Sub Commands',
+    #                   description='Valid Sub Commands',
+    #                   help='Sub Command help')
+    #
+    #   parser_testlists = subparsers.add_parser('RunTests',
+    #       help='Provide lists of source files to test or skip');
+    #
+    #   parser_testlists.add_argument(
+    #        '--SkipList', action=add_run_tests, nargs='+',
+    #        help='Run a list of unit tests'
+    #             '(default: run them all)')
+    #
+    #   parser_testlists.add_argument(
+    #        '--RunList', action=add_skip_tests, nargs='+',
+    #        help='Skip a list of unit tests'
+    #             '(default: run them all)')
+    #
+    #   parser_testlists.set_defaults(func=find_all_tests)
 
-#-------------------------
+    # -------------------------
     args = parser.parse_args()
 
     # subcommand version leaves this as the default argument
-#   if(args.func):
-#       args.func();
+    #   if(args.func):
+    #       args.func();
 
     if len(main_test_run_list) != 0:
         run_list_of_tests(main_test_run_list, main_test_skip_list)

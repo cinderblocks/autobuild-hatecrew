@@ -26,16 +26,18 @@ import os
 import glob
 from pathlib import Path
 
+
 # Hide some load-time logic in a throwaway class: don't pollute the
 # module-scope namespace with all these helper variables.
 class _local_scope(object):
-    ERROR   = "*** ERROR:"
+    ERROR = "*** ERROR:"
     WARNING = "WARNING:"
-    msgind  = max(len(ERROR), len(WARNING))
-    vermsg  = "\n%s You are running with Python %s.%s.%s." % \
-               ((msgind*' ',) + sys.version_info[:3])
+    msgind = max(len(ERROR), len(WARNING))
+    vermsg = "\n%s You are running with Python %s.%s.%s." % \
+             ((msgind * ' ',) + sys.version_info[:3])
     if sys.version_info[:2] < (3, 4):
         sys.exit("%s autobuild 2+ requires Python 3.4" % (ERROR.ljust(msgind)))
+
 
 from . import common
 import argparse
@@ -55,11 +57,13 @@ class RunHelp(argparse.Action):
         print(parser.format_help())
         parser.exit(0)
 
+
 class Version(argparse.Action):
     """
     The argparse action='version' action is almost good, but it produces its
     output on stderr instead of on stdout. We consider that a bug.
     """
+
     def __init__(self, option_strings, version=None,
                  dest=argparse.SUPPRESS,
                  default=argparse.SUPPRESS,
@@ -78,11 +82,12 @@ class Version(argparse.Action):
         print(formatter.format_help())
         parser.exit(message="")
 
+
 class Autobuild(object):
     def __init__(self):
         self.parser = argparse.ArgumentParser(
             description='Autobuild', prog='autobuild', add_help=False)
-        
+
         self.parser.add_argument('-V', '--version', action=Version,
                                  version='%%(prog)s %s' % common.AUTOBUILD_VERSION_STRING)
 
@@ -106,7 +111,7 @@ class Autobuild(object):
     def register_tools(self, tools_list):
         for tool in tools_list:
             self.register_tool(tool)
-    
+
     def search_for_and_import_tools(self, tools_list):
         for file_name in glob.glob(os.path.join(_SCRIPT_DIR, 'autobuild_tool_*.py')):
             module_name = Path(file_name).stem
@@ -170,21 +175,21 @@ class Autobuild(object):
             raise common.AutobuildError("invalid effective log level %s" % logging.getLevelName(level))
 
     def main(self, args_in):
-    
+
         logger = logging.getLogger('autobuild')
         logger.addHandler(logging.StreamHandler())
-        default_loglevel = self.get_default_loglevel_from_environment() 
+        default_loglevel = self.get_default_loglevel_from_environment()
 
         self.tools_list = []
-        
+
         self.parser.parent = self
         self.parser.add_argument('-h', '--help',
                                  help='find all valid Autobuild Tools and show help', action=RunHelp,
                                  nargs='?', default=argparse.SUPPRESS)
-        
+
         argdefs = (
             (('-n', '--dry-run',),
-                dict(help='run tool in dry run mode if available', action='store_true')),
+             dict(help='run tool in dry run mode if available', action='store_true')),
 
             ## NOTE: if the mapping of verbosity controls (--{quiet,verbose,debug})
             ##       is changed here, it must be changed to match in set_recursive_loglevel
@@ -197,18 +202,18 @@ class Autobuild(object):
             (('-d', '--debug',),
              dict(help='debug output', action='store_const', const=logging.DEBUG, dest='logging_level')),
             (('-p', '--platform',),
-                dict(default=None,
-                     dest='platform',
-                     help='may only be the current platform or "%s" (useful for source packages)' % common.PLATFORM_COMMON)),
+             dict(default=None,
+                  dest='platform',
+                  help='may only be the current platform or "%s" (useful for source packages)' % common.PLATFORM_COMMON)),
             (('-A', '--address-size',),
-                dict(choices=[32,64], type=int,
-                            default=int(os.environ.get('AUTOBUILD_ADDRSIZE',common.DEFAULT_ADDRSIZE)),
-                            dest='addrsize',
-                            help='specify address size (modifies platform)')),
+             dict(choices=[32, 64], type=int,
+                  default=int(os.environ.get('AUTOBUILD_ADDRSIZE', common.DEFAULT_ADDRSIZE)),
+                  dest='addrsize',
+                  help='specify address size (modifies platform)')),
         )
         for args, kwds in argdefs:
             self.parser.add_argument(*args, **kwds)
-            
+
         tool_to_run = -1
 
         for arg in args_in:

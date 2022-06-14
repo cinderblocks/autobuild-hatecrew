@@ -57,8 +57,10 @@ from .autobuild_tool_source_environment import get_enriched_environment
 
 logger = logging.getLogger('autobuild.install')
 
+
 class InstallError(common.AutobuildError):
     pass
+
 
 __help = """\
 This autobuild command fetches and installs package archives.
@@ -122,6 +124,7 @@ def handle_query_args(options, config_file, installed_file):
 
     if options.copyrights:
         copyrights = dict()
+
         def recurse_dependencies(packages, copyrights):
             if 'dependencies' in packages:
                 for pkg in packages['dependencies'].keys():
@@ -129,23 +132,26 @@ def handle_query_args(options, config_file, installed_file):
                     # we don't need to worry about two different copyrights here for the same package
                     if pkg not in copyrights:
                         if 'copyright' in packages['dependencies'][pkg]['package_description']:
-                            copyrights[pkg] = packages['dependencies'][pkg]['package_description']['copyright'].strip()+'\n'
+                            copyrights[pkg] = packages['dependencies'][pkg]['package_description'][
+                                                  'copyright'].strip() + '\n'
                             recurse_dependencies(packages['dependencies'][pkg], copyrights)
                         else:
                             logger.warning("Package '%s' does not specify a copyright" % pkg)
+
         recurse_dependencies(installed_file, copyrights)
         if 'package_description' in config_file and config_file.package_description.get('copyright') is not None:
-            all_copyrights="%s" % config_file.package_description['copyright'].strip()+'\n'
+            all_copyrights = "%s" % config_file.package_description['copyright'].strip() + '\n'
         else:
             # warning already issued by configfile
-            all_copyrights=""
+            all_copyrights = ""
         for pkg in sorted(copyrights):
-            all_copyrights+="%s: %s" % (pkg,copyrights[pkg])
-        print(all_copyrights.rstrip()) # the rstrip prevents two newlines on the end
+            all_copyrights += "%s: %s" % (pkg, copyrights[pkg])
+        print(all_copyrights.rstrip())  # the rstrip prevents two newlines on the end
         return True
 
     if options.versions:
         versions = dict()
+
         def recurse_dependencies(packages, versions):
             if 'dependencies' in packages:
                 for pkg in packages['dependencies'].keys():
@@ -153,15 +159,17 @@ def handle_query_args(options, config_file, installed_file):
                     # we don't need to worry about two different versions here for the same package
                     if pkg not in versions:
                         if 'copyright' in packages['dependencies'][pkg]['package_description']:
-                            versions[pkg] = packages['dependencies'][pkg]['package_description']['version'].strip()+'\n'
+                            versions[pkg] = packages['dependencies'][pkg]['package_description'][
+                                                'version'].strip() + '\n'
                             recurse_dependencies(packages['dependencies'][pkg], versions)
                         else:
                             logger.warning("Package '%s' does not specify a version" % pkg)
+
         recurse_dependencies(installed_file, versions)
-        all_versions=""
+        all_versions = ""
         for pkg in sorted(versions):
-            all_versions+="%s: %s" % (pkg,versions[pkg])
-        print(all_versions.rstrip()) # the rstrip prevents two newlines on the end
+            all_versions += "%s: %s" % (pkg, versions[pkg])
+        print(all_versions.rstrip())  # the rstrip prevents two newlines on the end
         return True
 
     if options.export_manifest:
@@ -173,12 +181,12 @@ def handle_query_args(options, config_file, installed_file):
     if options.list_dirty:
         installed = installed_file.dependencies
         dirty_pkgs = [installed[package]['package_description']['name'] for package in list(installed.keys())
-                      if 'dirty' in  installed[package] and installed[package]['dirty']]
+                      if 'dirty' in installed[package] and installed[package]['dirty']]
         return print_list("Dirty Packages", dirty_pkgs)
 
     if options.list_installed_urls:
         installed = installed_file.dependencies
-        archives=[]
+        archives = []
         for name, package in installed.items():
             if 'url' in package['archive']:
                 archives.append('%s' % package['archive']['url'])
@@ -193,8 +201,9 @@ def handle_query_args(options, config_file, installed_file):
 
     return False
 
+
 def print_package_for(target_file, installed_file):
-    found_package=None
+    found_package = None
     for package in installed_file.dependencies.values():
         if 'manifest' in package and target_file in package['manifest']:
             found_package = package
@@ -202,9 +211,10 @@ def print_package_for(target_file, installed_file):
 
     if found_package:
         print("file '%s' installed by package '%s'" \
-        % (target_file, package['package_description']['name']))
+              % (target_file, package['package_description']['name']))
     else:
         print("file '%s' not found in installed files" % target_file)
+
 
 def package_cache_path(package):
     """
@@ -212,6 +222,7 @@ def package_cache_path(package):
     The file may not actually exist.
     """
     return os.path.join(common.get_install_cache_dir(), os.path.basename(package))
+
 
 def get_package_file(package_name, package_url, hash_algorithm='md5', expected_hash=None):
     """
@@ -226,7 +237,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
         if auth_user is not None and auth_pass is not None:
             passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             passman.add_password(realm=None, uri='https://pkg.alchemyviewer.org/',
-                                user=auth_user, passwd=auth_pass)
+                                 user=auth_user, passwd=auth_pass)
             auth_handler = urllib.request.HTTPBasicAuthHandler(passman)
             opener = urllib.request.build_opener(auth_handler)
             urllib.request.install_opener(opener)
@@ -248,7 +259,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
                 os.remove(cache_file)
                 cache_file = None
             elif hash_algorithm is not None \
-              and not hash_algorithms.verify_hash(hash_algorithm, cache_file, expected_hash):
+                    and not hash_algorithms.verify_hash(hash_algorithm, cache_file, expected_hash):
                 logger.error("corrupt cached file removed: %s mismatch" % (hash_algorithm or "md5"))
                 os.remove(cache_file)
                 cache_file = None
@@ -262,7 +273,8 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
             logger.info("downloading %s:\n  %s\n     to %s" % (package_name, package_url, cache_file))
             try:
                 req = urllib.request.Request(package_url, None, headers)
-                package_response = urllib.request.urlopen(url=req, timeout=download_timeout_seconds, cafile=certifi.where())
+                package_response = urllib.request.urlopen(url=req, timeout=download_timeout_seconds,
+                                                          cafile=certifi.where())
             except urllib.error.URLError as err:
                 logger.error("error: %s\n  downloading package %s" % (err, package_url))
                 package_response = None
@@ -270,7 +282,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
 
             if package_response is not None:
                 with open(cache_file, 'wb') as cache:
-                    max_block_size = 1024*1024 # if this is changed, also change 'MB' in progress message below
+                    max_block_size = 1024 * 1024  # if this is changed, also change 'MB' in progress message below
                     package_size = int(package_response.headers.get("content-length", 0))
                     package_blocks = package_size / max_block_size if package_size else 0
                     if package_blocks < (package_size * max_block_size):
@@ -283,13 +295,15 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
                         if logger.getEffectiveLevel() <= logging.INFO:
                             # use CR and trailing comma to rewrite the same line each time for progress
                             if package_blocks:
-                                print("%d MB / %d MB (%d%%)\r" % (blocks_recvd, package_blocks, int(100*blocks_recvd/package_blocks)), end=' ', flush=True)
+                                print("%d MB / %d MB (%d%%)\r" % (
+                                blocks_recvd, package_blocks, int(100 * blocks_recvd / package_blocks)), end=' ',
+                                      flush=True)
                             else:
                                 print("%d\r" % blocks_recvd, end=' ', flush=True)
                         cache.write(block)
                         block = package_response.read(max_block_size)
                 if logger.getEffectiveLevel() <= logging.INFO:
-                    print("", flush=True) # get a new line following progress message
+                    print("", flush=True)  # get a new line following progress message
                 # some failures seem to leave empty cache files... delete and retry
                 if os.path.exists(cache_file) and os.path.getsize(cache_file) == 0:
                     logger.error("failed to write cache file: %s" % cache_file)
@@ -298,7 +312,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
 
         # error out if MD5 doesn't match
         if cache_file is not None \
-          and hash_algorithm is not None:
+                and hash_algorithm is not None:
             logger.info("verifying %s" % package_name)
             if not hash_algorithms.verify_hash(hash_algorithm, cache_file, expected_hash):
                 logger.error("download error: %s mismatch for %s" % ((hash_algorithm or "md5"), cache_file))
@@ -310,6 +324,7 @@ def get_package_file(package_name, package_url, hash_algorithm='md5', expected_h
                 logger.warning("Retrying download")
 
     return cache_file
+
 
 def _install_package(archive_path, install_dir, exclude=[]):
     """
@@ -359,6 +374,7 @@ def extract_metadata_from_package(archive_path, metadata_file_name):
             logger.error("package %s is not archived in a supported format" % archive_path)
     return metadata_file
 
+
 def __extract_tar_file(cachename, install_dir, exclude=[]):
     # Attempt to extract the package from the install cache
     if ".tar.zst" in cachename:
@@ -370,7 +386,7 @@ def __extract_tar_file(cachename, install_dir, exclude=[]):
                  if os.path.exists(os.path.join(install_dir, member.name))
                  and not os.path.isdir(os.path.join(install_dir, member.name))]
     if conflicts:
-        raise common.AutobuildError("conflicting files:\n  "+'\n  '.join(conflicts))
+        raise common.AutobuildError("conflicting files:\n  " + '\n  '.join(conflicts))
     tar.extractall(path=install_dir, members=extract)
     return [member.name for member in extract]
 
@@ -382,9 +398,10 @@ def __extract_zip_archive(cachename, install_dir, exclude=[]):
                  if os.path.exists(os.path.join(install_dir, member))
                  and not os.path.isdir(os.path.join(install_dir, member))]
     if conflicts:
-        raise common.AutobuildError("conflicting files:\n  "+'\n  '.join(conflicts))
+        raise common.AutobuildError("conflicting files:\n  " + '\n  '.join(conflicts))
     zip_archive.extractall(path=install_dir, members=extract)
     return extract
+
 
 def do_install(packages, config_file, installed, platform, install_dir, dry_run, local_archives=[]):
     """
@@ -439,6 +456,7 @@ def _install_local(configured_name, platform, package, package_path, install_dir
     else:
         return False
 
+
 def _install_binary(configured_name, platform, package, config_file, install_dir, installed, dry_run):
     # Check that we have a platform-specific or common url to use.
     req_plat = package.get_platform(platform)
@@ -468,7 +486,8 @@ def _install_binary(configured_name, platform, package, config_file, install_dir
 
     # get the package file in the cache, downloading if needed, and verify the hash
     # (raises InstallError on failure, so no check is needed)
-    cachefile = get_package_file(package_name, archive.url, hash_algorithm=(archive.hash_algorithm or 'md5'), expected_hash=archive.hash)
+    cachefile = get_package_file(package_name, archive.url, hash_algorithm=(archive.hash_algorithm or 'md5'),
+                                 expected_hash=archive.hash)
     if cachefile is None:
         raise InstallError("Failed to download package '%s' from '%s'" % (package_name, archive.url))
 
@@ -488,6 +507,7 @@ def _install_binary(configured_name, platform, package, config_file, install_dir
         return True
     else:
         return False
+
 
 def get_metadata_from_package(package_file, package=None):
     metadata_file_name = configfile.PACKAGE_METADATA_FILE
@@ -520,12 +540,13 @@ def get_metadata_from_package(package_file, package=None):
         metadata = configfile.MetadataDescription(stream=metadata_file)
     return metadata
 
+
 def install_new_if_needed(package, metadata, installed, dry_run):
     """
     Uninstall any installed different version
     Returns a boolean value for whether or not a new install is needed
     """
-    do_install=False
+    do_install = False
     installed_pkg = installed.dependencies.get(package.name, None)
     if installed_pkg:
         if installed_pkg['package_description']['version'] != metadata.package_description.version:
@@ -550,8 +571,8 @@ def install_new_if_needed(package, metadata, installed, dry_run):
         do_install = True
     return do_install
 
-def _install_common(configured_name, platform, package, package_file, install_dir, installed, dry_run):
 
+def _install_common(configured_name, platform, package, package_file, install_dir, installed, dry_run):
     metadata = get_metadata_from_package(package_file, package)
 
     # Check for required package_description elements
@@ -561,7 +582,8 @@ def _install_common(configured_name, platform, package, package_file, install_di
         metadata.dirty = True
 
     if configured_name != package.name:
-        raise InstallError("Configured package name '%s' does not match name in package '%s'" % (configured_name, package.name))
+        raise InstallError(
+            "Configured package name '%s' does not match name in package '%s'" % (configured_name, package.name))
 
     # this checks for a different version and uninstalls it if needed
     if not install_new_if_needed(package, metadata, installed, dry_run):
@@ -578,12 +600,12 @@ def _install_common(configured_name, platform, package, package_file, install_di
 Conflict: %s
   If you have updated the configuration for any of the conflicting packages,
   try uninstalling those packages and rerunning.""" % \
-  (package.name,
-   metadata.configuration,
-   metadata.package_description.version,
-   metadata.build_id,
-   dependancy_conflicts
-   ))
+                           (package.name,
+                            metadata.configuration,
+                            metadata.package_description.version,
+                            metadata.build_id,
+                            dependancy_conflicts
+                            ))
 
     # check that the install dir exists...
     if not os.path.exists(install_dir):
@@ -597,13 +619,15 @@ Conflict: %s
         logger.info("installing %s" % package.name)
     else:
         logger.info("would have attempted install of %s" % package.name)
-        return None,None
+        return None, None
 
     # extract the files from the package
     try:
         files = _install_package(package_file, install_dir, exclude=[configfile.PACKAGE_METADATA_FILE])
     except common.AutobuildError as details:
-        raise InstallError("Package '%s' attempts to install files already installed.\n%s\n  use --what-installed <file> to find the package that installed a conflict" % (package.name, details))
+        raise InstallError(
+            "Package '%s' attempts to install files already installed.\n%s\n  use --what-installed <file> to find the package that installed a conflict" % (
+            package.name, details))
     if files:
         for f in files:
             logger.debug("    extracted " + f)
@@ -611,26 +635,28 @@ Conflict: %s
     # Prefer the licence attribute and license file location from the metadata, 
     # but for backward compatibility with legacy packages, allow use of the attributes
     # in the installable description (which are otherwise not required)
-    if not ( metadata.package_description.get('license') or package.license ):
-        clean_files(install_dir, files) # clean up any partial install
+    if not (metadata.package_description.get('license') or package.license):
+        clean_files(install_dir, files)  # clean up any partial install
         raise InstallError("no license specified in metadata or configuration for %s." % package.name)
 
     license_file = metadata.package_description.get('license_file') or package.license_file
     if license_file is None \
-      or not (license_file in files \
-              or license_file.startswith('http://') \
-              or license_file.startswith('https://') \
-              ):
-        clean_files(install_dir, files) # clean up any partial install
+            or not (license_file in files
+                    or license_file.startswith('http://')
+                    or license_file.startswith('https://')):
+        clean_files(install_dir, files)  # clean up any partial install
         raise InstallError("nonexistent license_file for %s: %s" % (package.name, license_file))
 
     return metadata, files
 
+
 TransitiveSearched = set()
+
 
 def transitive_search(new_package, installed):
     TransitiveSearched.clear()
     return transitive_dependency_conflicts(new_package, installed)
+
 
 def transitive_dependency_conflicts(new_package, installed):
     """
@@ -647,16 +673,19 @@ def transitive_dependency_conflicts(new_package, installed):
     # Check for conflicts with the dependencies of the new package 
     TransitiveSearched.add(new_package['package_description']['name'])
     if 'dependencies' in new_package:
-        logger.debug("  checking conflicts for dependencies of %s in installed" % new_package['package_description']['name'])
+        logger.debug(
+            "  checking conflicts for dependencies of %s in installed" % new_package['package_description']['name'])
         for new_dependency in new_package['dependencies'].keys():
-            depend_conflicts=""
+            depend_conflicts = ""
             if new_dependency not in TransitiveSearched:
-                depend_conflicts = transitive_dependency_conflicts(new_package['dependencies'][new_dependency], installed)
+                depend_conflicts = transitive_dependency_conflicts(new_package['dependencies'][new_dependency],
+                                                                   installed)
                 if depend_conflicts:
                     conflicts += "dependency %s " % new_dependency
                     conflicts += depend_conflicts
                 TransitiveSearched.add(new_dependency)
     return conflicts
+
 
 def package_in_installed(new_package, installed):
     """
@@ -668,12 +697,12 @@ def package_in_installed(new_package, installed):
         previous = installed['dependencies']
         for used in previous.keys():
             # logger.debug("=====\npackage\n%s\nvs\n%s" % (pprint.pformat(new_package), pprint.pformat(previous[used])))
-            used_conflict=""
+            used_conflict = ""
             if new_package['package_description']['name'] == used:
                 if 'archive' in new_package and new_package['archive']:
                     # this is a dependency of the new package, so we have archive data
-                    if new_package['archive']['url'].rsplit('/',1)[-1] \
-                      != previous[used]['archive']['url'].rsplit('/',1)[-1]:
+                    if new_package['archive']['url'].rsplit('/', 1)[-1] \
+                            != previous[used]['archive']['url'].rsplit('/', 1)[-1]:
                         used_conflict += "  installed url  %s\n" % previous[used]['archive']['url']
                         used_conflict += "             vs  %s\n" % new_package['archive']['url']
                     if new_package['archive']['hash'] != previous[used]['archive']['hash']:
@@ -698,9 +727,9 @@ def package_in_installed(new_package, installed):
                 conflict += package_in_installed(new_package, previous[used])
                 if conflict:
                     conflict += "used by %s version %s build %s\n" % \
-                      ( previous[used]['package_description']['name'],
-                        previous[used]['package_description']['version'],
-                        previous[used]['build_id'])
+                                (previous[used]['package_description']['name'],
+                                 previous[used]['package_description']['version'],
+                                 previous[used]['build_id'])
 
             if conflict:
                 # in order to be able to add the import path, we only detect the first conflict
@@ -736,18 +765,19 @@ def uninstall(package_name, installed_config):
         return
 
     logger.info("uninstalling %s version %s" % (package_name, package.package_description.version))
-    clean_files(os.path.join(common.get_current_build_dir(),package.install_dir), package.manifest)
+    clean_files(os.path.join(common.get_current_build_dir(), package.install_dir), package.manifest)
     installed_config.save()
+
 
 def clean_files(install_dir, files):
     # Tarballs that name directories name them before the files they contain,
     # so the unpacker will create the directory before creating files in it.
     # For exactly that reason, we must remove things in reverse order.
     logger.debug("uninstalling from '%s'" % install_dir)
-    directories=set() # directories we've removed files from
+    directories = set()  # directories we've removed files from
     for filename in files:
         install_path = os.path.join(install_dir, filename)
-        if not os.path.isdir(install_path): # deal with directories below, after all files
+        if not os.path.isdir(install_path):  # deal with directories below, after all files
             try:
                 os.remove(install_path)
                 # We used to print "removing f" before the call above, the
@@ -772,16 +802,17 @@ def clean_files(install_dir, files):
     # directories that previously contained only subdirectories, so they were not
     # added to the list when deleting files above.
     while directories:
-        parents=set()
+        parents = set()
         for dirname in sorted(directories, key=len, reverse=True):
             dir_path = os.path.join(install_dir, dirname)
             if os.path.exists(dir_path) and not os.listdir(dir_path):
                 os.rmdir(dir_path)
                 logger.info("    removed " + dirname)
-                parent=os.path.dirname(dirname)
+                parent = os.path.dirname(dirname)
                 if dir_path:
                     parents.add(parent)
-        directories=parents
+        directories = parents
+
 
 def install_packages(args, config_file, install_dir, platform, packages):
     if not args.check_license:
@@ -800,9 +831,9 @@ def install_packages(args, config_file, install_dir, platform, packages):
     if handle_query_args(args, config_file, installed):
         return 0
 
-    local_packages=[]
-    if not packages: # no package names were specified on the command line
-        if args.local_archives: # one or more --local packages were specified
+    local_packages = []
+    if not packages:  # no package names were specified on the command line
+        if args.local_archives:  # one or more --local packages were specified
             logger.warning("Using --local with no package names listed installs only those local packages")
             local_packages = list(config_file.installables.keys())
         else:
@@ -821,7 +852,6 @@ def install_packages(args, config_file, install_dir, platform, packages):
         else:
             raise InstallError("no package '%s' found for local archive '%s'"
                                % (local_metadata.package_description.name, archive_path))
-
 
     # do the actual install of any new/updated packages
     packages = do_install(packages, config_file, installed, platform, install_dir,
@@ -865,7 +895,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         parser.add_argument(
             '--install-dir',
             default=None,
-            dest='select_dir',          # see common.select_directories()
+            dest='select_dir',  # see common.select_directories()
             help='Where to unpack the installed files.')
         parser.add_argument(
             '--list',
@@ -946,8 +976,8 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             default=self.configurations_from_environment())
 
     def run(self, args):
-        platform=common.get_current_platform()
-        logger.debug("installing platform "+platform)
+        platform = common.get_current_platform()
+        logger.debug("installing platform " + platform)
 
         # load the list of packages to install
         logger.debug("loading " + args.install_filename)
@@ -977,13 +1007,15 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                 common.select_directories(args, bconfig,
                                           "install", "installing packages for",
                                           lambda cnf:
-                                          os.path.join(bconfig.make_build_directory(cnf, platform=platform, dry_run=args.dry_run),
+                                          os.path.join(bconfig.make_build_directory(cnf, platform=platform,
+                                                                                    dry_run=args.dry_run),
                                                        "packages"))
 
             # get the absolute paths to the install dir and installed-packages.xml file
             for install_dir in install_dirs:
                 install_dir = os.path.realpath(install_dir)
                 install_packages(args, bconfig, install_dir, platform, args.package)
+
 
 if __name__ == '__main__':
     sys.exit("Please invoke this script using 'autobuild %s'" %

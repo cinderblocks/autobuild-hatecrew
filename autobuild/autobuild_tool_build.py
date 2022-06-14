@@ -38,9 +38,7 @@ from .common import AutobuildError
 from .autobuild_tool_configure import _configure_a_configuration
 from .autobuild_tool_source_environment import get_enriched_environment
 
-
 logger = logging.getLogger('autobuild.build')
-
 
 # Add autobuild/bin to path.
 os.environ["PATH"] = common.dedup_path(
@@ -50,8 +48,10 @@ os.environ["PATH"] = common.dedup_path(
 
 class BuildError(AutobuildError):
     pass
-    
-boolopt=re.compile("true$",re.I)
+
+
+boolopt = re.compile("true$", re.I)
+
 
 class AutobuildTool(autobuild_base.AutobuildBase):
     def get_details(self):
@@ -75,7 +75,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             help="an option to pass to the build command")
         parser.add_argument('--all', '-a', dest='all', default=False, action="store_true",
                             help="build all configurations")
-        parser.add_argument('--configuration', '-c', nargs='?', action="append", dest='configurations', 
+        parser.add_argument('--configuration', '-c', nargs='?', action="append", dest='configurations',
                             help="build a specific build configuration\n(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
@@ -83,24 +83,25 @@ class AutobuildTool(autobuild_base.AutobuildBase):
 
         parser.add_argument('--clean-only',
                             action="store_true",
-                            default=True if 'AUTOBUILD_CLEAN_ONLY' in os.environ and boolopt.match(os.environ['AUTOBUILD_CLEAN_ONLY']) else False,
+                            default=True if 'AUTOBUILD_CLEAN_ONLY' in os.environ and boolopt.match(
+                                os.environ['AUTOBUILD_CLEAN_ONLY']) else False,
                             dest='clean_only',
                             help="require that the build not depend on packages that are local or lack metadata\n"
-                            + "  may also be set by defining the environment variable AUTOBUILD_CLEAN_ONLY"
+                                 + "  may also be set by defining the environment variable AUTOBUILD_CLEAN_ONLY"
                             )
         parser.add_argument('--install-dir',
                             default=None,
-                            dest='select_dir',          # see common.select_directories()
+                            dest='select_dir',  # see common.select_directories()
                             help='Where installed files were unpacked.')
         parser.add_argument('--installed-manifest',
                             default=configfile.INSTALLED_CONFIG_FILE,
                             dest='installed_filename',
-                            help='The file used to record what is installed.') 
+                            help='The file used to record what is installed.')
 
     def run(self, args):
         platform = common.get_current_platform()
         build_id = common.establish_build_id(args.build_id)  # sets id (even if not specified),
-                                                             # and stores in the AUTOBUILD_BUILD_ID environment variable
+        # and stores in the AUTOBUILD_BUILD_ID environment variable
         config = configfile.ConfigurationDescription(args.config_file)
         package_errors = \
             configfile.check_package_attributes(config,
@@ -119,7 +120,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
             # is why we pass get() a default value that bypasses verbose)
             # (version_file was introduced at AUTOBUILD_CONFIG_VERSION 1.3)
             if "version_file" in package_errors.attrs \
-            and common.get_version_tuple(config.get("orig_ver", "1.3")) < (1, 3):
+                    and common.get_version_tuple(config.get("orig_ver", "1.3")) < (1, 3):
                 verbose = """
 New requirement: instead of stating a particular version number in the %(xml)s
 file, we now require you to configure a version_file attribute. This should be
@@ -233,8 +234,8 @@ only by 'autobuild build' to create package metadata.
                     logger.debug("no installed files found (%s)" % installed_pathname)
                 if args.clean_only and metadata_file.dirty:
                     raise BuildError("Build depends on local or legacy installables\n"
-                               +"  use 'autobuild install --list-dirty' to see problem packages\n"
-                               +"  rerun without --clean-only to allow building anyway")
+                                     + "  use 'autobuild install --list-dirty' to see problem packages\n"
+                                     + "  rerun without --clean-only to allow building anyway")
                 if not args.dry_run:
                     metadata_file.save()
         finally:

@@ -26,7 +26,6 @@
 Includes tools for updating older versions of autobuild configurations to the the current format.
 """
 
-
 from .common import AutobuildError, get_version_tuple
 # Please do NOT import configfile data classes! See comments for _register().
 # or Executable either, which also changes with AUTOBUILD_CONFIG_VERSION
@@ -40,12 +39,14 @@ logger = logging.getLogger('autobuild.update')
 class UpdateError(AutobuildError):
     pass
 
+
 # ****************************************************************************
 #   Updater management machinery
 # ****************************************************************************
 # A map of updaters keyed by 'from' version string, each with a list of ('to'
 # version, conversion function) pairs.
 _updaters = {}
+
 
 # Do not directly manipulate _updaters. Register each converter using this
 # _register() function.
@@ -78,6 +79,7 @@ def _register(fromver, tover, func):
     # Each fromver accesses a list of pairs. Create or extend that list with
     # this new pair.
     _updaters.setdefault(fromver, []).append((tover, func))
+
 
 # Get a list of (fromver, tover, converter) triples to apply in succession to
 # bring incoming LLSD in 'version' format up to AUTOBUILD_CONFIG_VERSION
@@ -133,6 +135,7 @@ def _get_applicable_updaters(configname, version):
     # ta daa, we've reached AUTOBUILD_CONFIG_VERSION!
     return result
 
+
 def convert_to_current(configname, config):
     """
     Pass the LLSD config data read from file configname.
@@ -163,13 +166,14 @@ https://wiki.lindenlab.com/wiki/Autobuild/Incompatible_Configuration_File_Error"
         # info message clarifies the context in which a subsequent error might
         # appear
         logger.warning("Converting %s data from format version %s to version %s..." %
-                    (configname, fromver, tover))
+                       (configname, fromver, tover))
         config = converter(config)
         # update the version string in the config data; don't require every
         # converter to do that independently; easy to forget
         config["version"] = tover
 
     return config, version
+
 
 # ****************************************************************************
 #   Updaters
@@ -233,7 +237,6 @@ class _Update_1_1(object):
                 'filters': None,
                 'options': []}
 
-
     def __call__(self, old_config):
         assert old_config['version'] == '1.1'
         config = old_config.copy()
@@ -261,7 +264,7 @@ class _Update_1_1(object):
         for (key, value) in self.package_properties.items():
             if key in old_package:
                 package[value] = old_package[key]
-    
+
     def _insert_archives(self, old_archives, package):
         for (platform_name, old_archive) in old_archives.items():
             platform = self._get_platform(platform_name, package)
@@ -269,11 +272,11 @@ class _Update_1_1(object):
             platform["archive"] = archive
             for (key, value) in self.archive_properties.items():
                 archive[value] = old_archive[key]
-   
+
     def _insert_command(self, type, old_commands, package):
         for (platform_name, old_command) in old_commands.items():
             platform = self._get_platform(platform_name, package)
-            #FIXME: find a better way to choose the default configuration.
+            # FIXME: find a better way to choose the default configuration.
             default_configuration = 'RelWithDebInfo'
             if default_configuration in platform["configurations"]:
                 build_configuration = platform["configurations"][default_configuration]
@@ -292,7 +295,7 @@ class _Update_1_1(object):
                 build_configuration["default"] = True
             if 'directory' in old_command:
                 platform["build_directory"] = old_command['directory']
-    
+
     def _get_platform(self, platform_name, package):
         if platform_name in package["platforms"]:
             return package["platforms"][platform_name]
@@ -301,6 +304,7 @@ class _Update_1_1(object):
             platform["name"] = platform_name
             package["platforms"][platform_name] = platform
             return platform
+
 
 _register('1.1', '1.2', _Update_1_1())
 

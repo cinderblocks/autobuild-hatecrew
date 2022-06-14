@@ -36,14 +36,12 @@ Author : Martin Reddy
 Date   : 2010-04-13
 """
 
-import argparse
 from collections import OrderedDict
 import itertools
 import logging
 import os
 import platform
 import pprint
-import shutil
 import sys
 import tempfile
 import time
@@ -58,16 +56,17 @@ logger = logging.getLogger('autobuild.common')
 class AutobuildError(RuntimeError):
     pass
 
-# define the supported platforms
-PLATFORM_DARWIN    = 'darwin'
-PLATFORM_DARWIN64  = 'darwin64'
-PLATFORM_WINDOWS   = 'windows'
-PLATFORM_WINDOWS64 = 'windows64'
-PLATFORM_LINUX     = 'linux'
-PLATFORM_LINUX64   = 'linux64'
-PLATFORM_COMMON    = 'common'
 
-DEFAULT_ADDRSIZE = 32
+# define the supported platforms
+PLATFORM_DARWIN = 'darwin'
+PLATFORM_DARWIN64 = 'darwin64'
+PLATFORM_WINDOWS = 'windows'
+PLATFORM_WINDOWS64 = 'windows64'
+PLATFORM_LINUX = 'linux'
+PLATFORM_LINUX64 = 'linux64'
+PLATFORM_COMMON = 'common'
+
+DEFAULT_ADDRSIZE = 64
 
 # Similarly, if we have an explicit platform in the environment, keep it. We
 # used to query os.environ in establish_platform(), instead of up here. The
@@ -79,9 +78,11 @@ DEFAULT_ADDRSIZE = 32
 # here at load time lets each establish_platform() call make its decisions
 # independently of any previous calls.
 _AUTOBUILD_PLATFORM_OVERRIDE = os.environ.get('AUTOBUILD_PLATFORM_OVERRIDE')
-_AUTOBUILD_PLATFORM          = os.environ.get('AUTOBUILD_PLATFORM')
+_AUTOBUILD_PLATFORM = os.environ.get('AUTOBUILD_PLATFORM')
 
-Platform=None
+Platform = None
+
+
 def get_current_platform():
     """
     Return appropriate the autobuild name for the current platform.
@@ -89,14 +90,18 @@ def get_current_platform():
     global Platform
     if Platform is None:
         logger.debug("platform recurse")
-        establish_platform(None) # uses the default for where we are running to set Platform
+        establish_platform(None)  # uses the default for where we are running to set Platform
     return Platform
 
-_build_dir=None
+
+_build_dir = None
+
+
 def establish_build_dir(directory):
     global _build_dir
     logger.debug("Establishing build dir as '%s'" % directory)
     _build_dir = directory
+
 
 def get_current_build_dir():
     """
@@ -107,21 +112,23 @@ def get_current_build_dir():
         raise AutobuildError("No build directory established")
     return _build_dir
 
+
 def build_dir_relative_path(path):
     """
     Returns a relative path derived from the input path rooted at the configuration file's
     directory when the input is an absolute path.
     """
-    outpath=path
+    outpath = path
     if os.path.isabs(path):
         # ensure that there is a trailing os.pathsep
         # so that when this prefix is stripped below to make the
         # path relative, we don't start with os.pathsep
-        build_dir=os.path.join(get_current_build_dir(),"")
+        build_dir = os.path.join(get_current_build_dir(), "")
         logger.debug("path '%s' build_dir '%s'" % (path, build_dir))
         if path.startswith(build_dir):
-            outpath=path[len(build_dir):]
+            outpath = path[len(build_dir):]
     return outpath
+
 
 def is_system_64bit():
     """
@@ -129,46 +136,49 @@ def is_system_64bit():
     """
     return platform.machine().lower() in ("x86_64", "amd64", "arm64")
 
+
 def is_system_windows():
     # Note that Python has a commitment to the value "win32" even for 64-bit
     # Windows: http://stackoverflow.com/a/2145582/5533635
     return sys.platform == 'win32' or sys.platform == 'cygwin'
 
+
 def check_platform_system_match(platform):
     """
     Confirm that the selected platform is compatibile with the system we're on
     """
-    platform_should_be=None
+    platform_should_be = None
     if platform in (PLATFORM_WINDOWS, PLATFORM_WINDOWS64):
         if not is_system_windows():
-            platform_should_be="Windows"
+            platform_should_be = "Windows"
     elif platform in (PLATFORM_LINUX, PLATFORM_LINUX64):
         if not sys.platform.startswith('linux'):
-            platform_should_be="Linux"
+            platform_should_be = "Linux"
     elif platform in (PLATFORM_DARWIN, PLATFORM_DARWIN64):
         if sys.platform != 'darwin':
-            platform_should_be="Mac OS X"
+            platform_should_be = "Mac OS X"
     elif platform != PLATFORM_COMMON:
         raise AutobuildError("Unsupported platform '%s'" % platform)
 
     if platform_should_be:
         raise AutobuildError("Platform '%s' is only supported running on %s" % (platform, platform_should_be))
 
+
 def establish_platform(specified_platform=None, addrsize=DEFAULT_ADDRSIZE):
     """
     Select the appropriate the autobuild name for the platform.
     """
     global Platform
-    specified_addrsize=addrsize
+    specified_addrsize = addrsize
     if addrsize == 64 and not is_system_64bit():
         logger.warning("This system is not 64 bit capable; using 32 bit address size")
         addrsize = 32
     if specified_platform is not None:
-        Platform=specified_platform
+        Platform = specified_platform
     elif _AUTOBUILD_PLATFORM_OVERRIDE:
-        Platform=_AUTOBUILD_PLATFORM_OVERRIDE
+        Platform = _AUTOBUILD_PLATFORM_OVERRIDE
     elif _AUTOBUILD_PLATFORM:
-        Platform=_AUTOBUILD_PLATFORM
+        Platform = _AUTOBUILD_PLATFORM
     elif sys.platform == 'darwin':
         if addrsize == 64:
             Platform = PLATFORM_DARWIN64
@@ -179,7 +189,7 @@ def establish_platform(specified_platform=None, addrsize=DEFAULT_ADDRSIZE):
             Platform = PLATFORM_LINUX64
         else:
             Platform = PLATFORM_LINUX
-    elif is_system_windows():  
+    elif is_system_windows():
         if addrsize == 64:
             Platform = PLATFORM_WINDOWS64
         else:
@@ -189,14 +199,15 @@ def establish_platform(specified_platform=None, addrsize=DEFAULT_ADDRSIZE):
 
     check_platform_system_match(Platform)
 
-    os.environ['AUTOBUILD_ADDRSIZE'] = str(addrsize) # for spawned commands
-    os.environ['AUTOBUILD_PLATFORM'] = Platform # for spawned commands
-    os.environ['AUTOBUILD_PLATFORM_OVERRIDE'] = Platform # for recursive invocations
+    os.environ['AUTOBUILD_ADDRSIZE'] = str(addrsize)  # for spawned commands
+    os.environ['AUTOBUILD_PLATFORM'] = Platform  # for spawned commands
+    os.environ['AUTOBUILD_PLATFORM_OVERRIDE'] = Platform  # for recursive invocations
 
     logger.debug("Specified platform %s address-size %d: result %s" \
                  % (specified_platform, specified_addrsize, Platform))
-    
+
     return Platform
+
 
 def get_version_tuple(version_string):
     try:
@@ -208,6 +219,7 @@ def get_version_tuple(version_string):
         # Treat any unparseable version as "very old"
         return (0,)
 
+
 def get_current_user():
     """
     Get the login name for the current user.
@@ -218,7 +230,7 @@ def get_current_user():
         return getpass.getuser()
     except ImportError:
         import ctypes
-        MAX_PATH = 260                  # according to a recent WinDef.h
+        MAX_PATH = 260  # according to a recent WinDef.h
         name = ctypes.create_unicode_buffer(MAX_PATH)
         namelen = ctypes.c_int(len(name))  # len in chars, NOT bytes
         if not ctypes.windll.advapi32.GetUserNameW(name, ctypes.byref(namelen)):
@@ -319,7 +331,7 @@ def find_executable(executables, exts=None, path=None):
     if exts is None:
         exts = sys.platform.startswith("win") and [".com", ".exe", ".bat", ".cmd"] or []
     if path is None:
-        path=os.environ.get('PATH', '').split(os.pathsep)
+        path = os.environ.get('PATH', '').split(os.pathsep)
     # The original implementation iterated over directories in PATH, checking
     # for each name in 'executables' in a given directory. This makes
     # intuitive sense -- but it's wrong. When 'executables' is (e.g.) ['foobar',
@@ -371,7 +383,7 @@ def compute_sha256(path):
     """
     Returns the SHA256 sum for the given file.
     """
-    from hashlib import sha256      # Python 2.6
+    from hashlib import sha256  # Python 2.6
 
     try:
         stream = open(path, 'rb')
@@ -619,18 +631,20 @@ def establish_build_id(build_id_arg):
         # construct a timestamp that will fit into a signed 32 bit integer:
         #   <two digit year><three digit day of year><two digit hour><two digit minute>
         build_id = time.strftime("%y%j%H%M", time.gmtime())
-        logger.warning("Warning: no --id argument or AUTOBUILD_BUILD_ID environment variable specified;\n    using a value from the UTC date and time (%s), which may not be unique" % build_id)
+        logger.warning(
+            "Warning: no --id argument or AUTOBUILD_BUILD_ID environment variable specified;\n    using a value from the UTC date and time (%s), which may not be unique" % build_id)
 
     logger.debug("Build id %s" % build_id)
     os.environ['AUTOBUILD_BUILD_ID'] = str(build_id)
     return str(build_id)
 
 
+# facebook me harder, daddy
 class ZstdTarFile(tarfile.TarFile):
     def __init__(self, name, mode='r', *, level_or_option=None, zstd_dict=None, **kwargs):
         self.zstd_file = ZstdFile(name, mode,
-                                level_or_option=level_or_option,
-                                zstd_dict=zstd_dict)
+                                  level_or_option=level_or_option,
+                                  zstd_dict=zstd_dict)
         try:
             super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
         except:

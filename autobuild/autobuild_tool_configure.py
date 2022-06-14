@@ -35,7 +35,6 @@ from . import configfile
 import os
 import logging
 
-
 logger = logging.getLogger('autobuild.configure')
 
 
@@ -47,7 +46,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
     def get_details(self):
         return dict(name='configure',
                     description="Configures platform targets.")
-     
+
     def register(self, parser):
         parser.usage = "%(prog)s [-h] [--dry-run] [-c CONFIGURATION][-a][--config-file FILE] [-- OPT [OPT ...]]"
         parser.description = "configure the build directory to prepare for either the 'autobuild build' command or a manual build. (not all packages will require this step)"
@@ -55,7 +54,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             dest='config_file',
                             default=configfile.AUTOBUILD_CONFIG_FILE,
                             help='(defaults to $AUTOBUILD_CONFIG_FILE or "autobuild.xml")')
-        parser.add_argument('--configuration', '-c', nargs='?', action="append", dest='configurations', 
+        parser.add_argument('--configuration', '-c', nargs='?', action="append", dest='configurations',
                             help="build a specific build configuration\n(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
@@ -66,7 +65,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             help="an option to pass to the configuration command")
 
     def run(self, args):
-        platform=common.get_current_platform()
+        platform = common.get_current_platform()
         common.establish_build_id(args.build_id)  # sets id (even if not specified),
                                                   # and stores in the AUTOBUILD_BUILD_ID environment variable
         config = configfile.ConfigurationDescription(args.config_file)
@@ -108,25 +107,6 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         finally:
             os.chdir(current_directory)
 
-## nat 2016-12-01: As far as I can tell, this function is completely unused.
-## If I'm wrong, we'll uncomment it and life goes on. If I'm right, I'll get
-## rid of it next time I maintain this module for any reason.
-##def configure(config, build_configuration_name, extra_arguments=[], environment={}):
-##    """
-##    Execute the platform configure command for the named build configuration.
-##
-##    The special 'common' platform may be defined which can provide parent commands for the configure 
-##    command using the inheritence mechanism described in the 'executable' package.  The working
-##    platform's build configuration will be matched to the build configuration in common with the
-##    same name if it exists.  To be configured, a build configuration must be defined in the working
-##    platform though it does not need to contain any actual commands if it is desired that the common
-##    commands be used.  Build configurations defined in the common platform but not the working
-##    platform are not configured.
-##    """
-##    build_configuration = config.get_build_configuration(build_configuration_name, platform)
-##    return _configure_a_configuration(config, build_configuration, extra_arguments,
-##                                      environment)
-
 
 def _configure_a_configuration(config, build_configuration, extra_arguments, dry_run=False,
                                environment={}):
@@ -143,9 +123,9 @@ def _configure_a_configuration(config, build_configuration, extra_arguments, dry
     # see if the specified configuration exists; if so, use it
     if build_configuration.configure is not None:
         configure_executable = copy.copy(build_configuration.configure)
-        configure_executable.parent = common_configure 
+        configure_executable.parent = common_configure
 
-    # if the specified configuration doesn't exist, and common does, use common
+        # if the specified configuration doesn't exist, and common does, use common
     elif common_configure is not None:
         configure_executable = common_configure
 

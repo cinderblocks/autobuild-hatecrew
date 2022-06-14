@@ -42,7 +42,6 @@ from .autobuild_tool_install import get_package_file, get_metadata_from_package
 
 logger = logging.getLogger('autobuild.installables')
 
-
 # Match key=value arguments.
 _key_value_regexp = re.compile(r'(\w+)\s*=\s*(\S+)')
 
@@ -55,7 +54,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
     def get_details(self):
         return dict(name=self.name_from_file(__file__),
                     description="Manipulate installable package entries in the autobuild configuration.")
-     
+
     def register(self, parser):
         parser.description = "specify installables as dependencies of the current pacakge for use by the 'autobuild install' command."
         parser.add_argument('--config-file',
@@ -82,7 +81,6 @@ class AutobuildTool(autobuild_base.AutobuildBase):
      Adds the specified package url using explicit package name, platform, and hash values.
      The specified values must agree with the metadata in the package if it is present, 
      and with the construction of the package file name."""
-
 
     def run(self, args):
         config = configfile.ConfigurationDescription(args.config_file)
@@ -114,13 +112,14 @@ def _dict_from_key_value_arguments(arguments):
             logger.warning('ignoring malformed argument ' + argument)
     return dictionary
 
+
 def _get_new_metadata(config, args_name, args_archive, arguments):
     # Get any name/value pairs from the command line
-    key_values=_dict_from_key_value_arguments(arguments)
-    
+    key_values = _dict_from_key_value_arguments(arguments)
+
     if args_archive and 'url' in key_values:
-      raise InstallablesError("--archive (%s) and url (%s) may not both be specified" \
-                              % (args_archive, key_values['url']))
+        raise InstallablesError("--archive (%s) and url (%s) may not both be specified" \
+                                % (args_archive, key_values['url']))
     if args_archive:
         archive_path = args_archive.strip()
     elif 'url' in key_values:
@@ -132,10 +131,10 @@ def _get_new_metadata(config, args_name, args_archive, arguments):
         if _is_uri(archive_path):
             archive_url = archive_path
         else:
-            archive_url = 'file://'+config.absolute_path(archive_path)
-        archive_file = get_package_file(args_name, archive_url, 
-                                        hash_algorithm=key_values.get('hash_algorithm','md5'),
-                                        expected_hash=key_values.get('hash',None))
+            archive_url = 'file://' + config.absolute_path(archive_path)
+        archive_file = get_package_file(args_name, archive_url,
+                                        hash_algorithm=key_values.get('hash_algorithm', 'md5'),
+                                        expected_hash=key_values.get('hash', None))
         if archive_file:
             metadata = get_metadata_from_package(archive_file)
             metadata.archive = configfile.ArchiveDescription()
@@ -154,26 +153,27 @@ def _get_new_metadata(config, args_name, args_archive, arguments):
 
     package_name = _check_name(args_name, key_values, metadata)
     if metadata.package_description['name'] is None:
-          metadata.package_description['name'] = package_name
+        metadata.package_description['name'] = package_name
 
     for description_key in _PACKAGE_ATTRIBUTES:
         if description_key in key_values:
-            logger.warning("specifying '%s' in the installable is no longer required\n  if it is in the package metadata"
-                           % description_key)
+            logger.warning(
+                "specifying '%s' in the installable is no longer required\n  if it is in the package metadata"
+                % description_key)
             if description_key in metadata.package_description \
-              and metadata.package_description[description_key] is not None \
-              and key_values[description_key] != metadata.package_description[description_key]:
+                    and metadata.package_description[description_key] is not None \
+                    and key_values[description_key] != metadata.package_description[description_key]:
                 raise InstallablesError("command line %s (%s) does not match archive %s (%s)" \
-                                        % (description_key, key_values[description_key], 
+                                        % (description_key, key_values[description_key],
                                            description_key, metadata.package_description[description_key]))
             else:
                 metadata.package_description[description_key] = key_values.pop(description_key)
-        
+
     for archive_key in _ARCHIVE_ATTRIBUTES:
         if archive_key in key_values:
             if archive_key in metadata.archive \
-              and metadata.archive[archive_key] \
-              and key_values[archive_key] != metadata.archive[archive_key]:
+                    and metadata.archive[archive_key] \
+                    and key_values[archive_key] != metadata.archive[archive_key]:
                 raise InstallablesError("command line %s (%s) does not match archive %s (%s)" \
                                         % (archive_key, key_values[archive_key],
                                            archive_key, metadata.archive[archive_key]))
@@ -182,19 +182,19 @@ def _get_new_metadata(config, args_name, args_archive, arguments):
 
     if 'platform' in key_values:
         if 'platform' in metadata \
-          and metadata['platform'] is not None \
-          and key_values['platform'] != metadata['platform'] \
-          and metadata['platform'] != common.PLATFORM_COMMON:
-          raise InstallablesError("specified platform '%s' does not match archive platform '%s'" \
-                                  % ( key_values['platform'], metadata['platform']))
+                and metadata['platform'] is not None \
+                and key_values['platform'] != metadata['platform'] \
+                and metadata['platform'] != common.PLATFORM_COMMON:
+            raise InstallablesError("specified platform '%s' does not match archive platform '%s'" \
+                                    % (key_values['platform'], metadata['platform']))
         else:
             platform = key_values.pop('platform')
     else:
         if 'platform' in metadata \
-          and metadata['platform'] is not None:
+                and metadata['platform'] is not None:
             platform = metadata['platform']
         else:
-          raise InstallablesError("Unspecified platform")
+            raise InstallablesError("Unspecified platform")
 
     platform_description = configfile.PlatformDescription()
     platform_description.name = platform
@@ -208,7 +208,7 @@ def add(config, args_name, args_archive, arguments):
     """
     Adds a package to the configuration's installable list.
     """
-    (metadata, platform_description)  = _get_new_metadata(config, args_name, args_archive, arguments)
+    (metadata, platform_description) = _get_new_metadata(config, args_name, args_archive, arguments)
     package_name = metadata.package_description.name
     if package_name in config.installables:
         raise InstallablesError('package %s already exists, use edit instead' % package_name)
@@ -222,19 +222,19 @@ def edit(config, args_name, args_archive, arguments):
     """
     Modifies an existing installable entry.
     """
-    (metadata, platform_description)  = _get_new_metadata(config, args_name, args_archive, arguments)
+    (metadata, platform_description) = _get_new_metadata(config, args_name, args_archive, arguments)
     package_name = metadata.package_description.name
 
     if package_name not in config.installables:
         raise InstallablesError('package %s does not exist, use add instead' % package_name)
     if args_name and args_name != package_name:
         raise InstallablesError('name argument (%s) does not match package name (%s)' % (args_name, package_name))
-        
+
     installed_package_description = config.installables[package_name]
     for element in _PACKAGE_ATTRIBUTES:
         if element in metadata.package_description \
-          and  metadata.package_description[element] is not None:
-          installed_package_description[element] = metadata.package_description[element]
+                and metadata.package_description[element] is not None:
+            installed_package_description[element] = metadata.package_description[element]
 
     platform_name = platform_description.name
     if platform_name in installed_package_description.platforms:
@@ -246,10 +246,9 @@ def edit(config, args_name, args_archive, arguments):
 
     for element in _ARCHIVE_ATTRIBUTES:
         if element in metadata.archive \
-          and metadata.archive[element] is not None:
+                and metadata.archive[element] is not None:
             installed_package_description.platforms[platform_name].archive[element] = metadata.archive[element]
 
-    
 
 def remove(config, installable_name):
     """
@@ -270,8 +269,11 @@ def print_installable(config, installable_name):
 
 
 uri_regex = re.compile(r'\w+://')
+
+
 def _is_uri(path):
     return path and bool(uri_regex.match(path))
+
 
 def _check_name(arg_name, key_values, metadata):
     package_name = None
@@ -279,24 +281,25 @@ def _check_name(arg_name, key_values, metadata):
         if 'name' in key_values and arg_name != key_values['name']:
             raise InstallablesError("name argument and name key/value do not match")
         if 'name' in metadata.package_description \
-          and metadata.package_description['name'] is not None \
-          and arg_name != metadata.package_description['name']:
+                and metadata.package_description['name'] is not None \
+                and arg_name != metadata.package_description['name']:
             raise InstallablesError("command line name (%s) does not match archive name (%s)" \
                                     % (arg_name, metadata.package_description['name']))
         package_name = arg_name
     elif 'name' in key_values and key_values['name'] is not None:
         if 'name' in metadata.package_description \
-          and metadata.package_description['name'] is not None \
-          and key_values['name'] != metadata.package_description['name']:
+                and metadata.package_description['name'] is not None \
+                and key_values['name'] != metadata.package_description['name']:
             raise InstallablesError("key/value name (%s) does not match archive name (%s)" \
                                     % (key_values['name'], metadata.package_description['name']))
         package_name = key_values['name']
     elif 'name' in metadata.package_description \
-      and metadata.package_description['name'] is not None:
+            and metadata.package_description['name'] is not None:
         package_name = metadata.package_description['name']
     else:
         raise InstallablesError('installable package name not specified or found in archive')
     return package_name
+
 
 def _warn_unused(data):
     for (key, value) in data.items():

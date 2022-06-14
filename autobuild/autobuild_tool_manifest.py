@@ -40,7 +40,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
     def get_details(self):
         return dict(name=self.name_from_file(__file__),
                     description="Manipulate manifest entries to the autobuild configuration.")
-     
+
     def register(self, parser):
         parser.description = "specify manifest of artifacts to be packaged by the 'autobuild package' command."
         parser.add_argument('--config-file',
@@ -52,7 +52,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         parser.add_argument('pattern', nargs='*', help='a file pattern')
 
     def run(self, args):
-        platform=common.get_current_platform()
+        platform = common.get_current_platform()
         config = configfile.ConfigurationDescription(args.config_file)
         if args.command == 'add':
             [add(config, platform, p) for p in args.pattern]

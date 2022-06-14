@@ -38,6 +38,7 @@ import logging
 
 logger = logging.getLogger('autobuild.executable')
 
+
 class ExecutableError(common.AutobuildError):
     pass
 
@@ -62,18 +63,23 @@ class Executable(common.Serialized):
         myExecutable = Executable(command='gcc', options=['-ggdb'], arguments=['foo.c', 'bar.c'])
         result = myExecutable()
     """
-    
+
     parent = None
-    
-    def __init__(self, command=None, options=[], arguments=None, filters=None, parent=None):
+
+    def __init__(self, command=None, options=None, arguments=None, filters=None, parent=None):
+        super().__init__()
+        if options is None:
+            options = []
         self.command = command
         self.options = options
         self.arguments = arguments
         self.parent = parent
         self.filters = filters
-    
-    def __call__(self, options=[], environment=os.environ):
+
+    def __call__(self, options=None, environment=os.environ):
         # let the passed environment help us find self.command
+        if options is None:
+            options = []
         commandlist = self._get_all_arguments(options)
         prog = commandlist[0]
         # If prog is already absolute, leave it alone.
@@ -96,7 +102,7 @@ class Executable(common.Serialized):
                 # find_executable() returns None if not found
                 if prog:
                     commandlist[0] = prog
-        
+
         filters = self.get_filters()
         self.show_command(commandlist, filters)
         if not filters:
@@ -115,18 +121,21 @@ class Executable(common.Serialized):
                 print(line, end=' ')
             return process.wait()
 
-    def show_command(self, commandlist, filters):
-        showcmd=" '%s'" % "' '".join(commandlist)
-        showfilter="\n| filter (%s)" % "|".join(filters) if filters else ""
+    @staticmethod
+    def show_command(commandlist, filters):
+        showcmd = " '%s'" % "' '".join(commandlist)
+        showfilter = "\n| filter (%s)" % "|".join(filters) if filters else ""
         print("%s%s" % (showcmd, showfilter))
         sys.stdout.flush()
 
-    def __str__(self, options=[]):
+    def __str__(self, options=None):
+        if options is None:
+            options = []
         try:
             return ' '.join(self._get_all_arguments(options))
         except:
             return 'INVALID EXECUTABLE!'
-    
+
     def get_arguments(self):
         """
         Returns the arguments which will be passed to the command on execution. 
@@ -137,7 +146,7 @@ class Executable(common.Serialized):
             return self.parent.get_arguments()
         else:
             return []
-    
+
     def get_options(self):
         """
         Returns all options which will be passed to the command on execution. 
@@ -148,7 +157,7 @@ class Executable(common.Serialized):
             all_options = []
         all_options.extend(self.options)
         return all_options
-    
+
     def get_command(self):
         """
         Returns the command this object will envoke on execution.
@@ -159,7 +168,7 @@ class Executable(common.Serialized):
             return self.parent.get_command()
         else:
             return None
-    
+
     def get_filters(self):
         """
         Returns the filters on command output.
@@ -170,7 +179,7 @@ class Executable(common.Serialized):
             return self.parent.get_filters()
         else:
             return None
-    
+
     def _get_all_arguments(self, options):
         actual_command = self.get_command()
         if actual_command is None:
@@ -179,4 +188,4 @@ class Executable(common.Serialized):
         all_arguments.extend(self.get_options())
         all_arguments.extend(options)
         all_arguments.extend(self.get_arguments())
-        return all_arguments        
+        return all_arguments

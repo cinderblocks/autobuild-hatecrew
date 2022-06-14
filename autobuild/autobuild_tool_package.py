@@ -51,7 +51,6 @@ import tarfile
 import getpass
 import glob
 import subprocess
-import urllib.request, urllib.error, urllib.parse
 import re
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -66,7 +65,8 @@ logger = logging.getLogger('autobuild.package')
 #
 # Talking to remote servers
 #
-boolopt=re.compile("true$",re.I)
+boolopt = re.compile("true$", re.I)
+
 
 class AutobuildTool(autobuild_base.AutobuildBase):
     def get_details(self):
@@ -103,17 +103,18 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             help="package all configurations")
         parser.add_argument('--clean-only',
                             action="store_true",
-                            default=True if 'AUTOBUILD_CLEAN_ONLY' in os.environ and boolopt.match(os.environ['AUTOBUILD_CLEAN_ONLY']) else False,
+                            default=True if 'AUTOBUILD_CLEAN_ONLY' in os.environ and boolopt.match(
+                                os.environ['AUTOBUILD_CLEAN_ONLY']) else False,
                             dest='clean_only',
                             help="require that the package not depend on installables that are local or lack metadata\n"
-                            + "  may also be set by defining the environment variable AUTOBUILD_CLEAN_ONLY"
+                                 + "  may also be set by defining the environment variable AUTOBUILD_CLEAN_ONLY"
                             )
         parser.add_argument('--list-depends',
                             action="store_true",
                             default=False,
                             dest='list_depends',
                             help="return success if the package contains no dependencies that either are local or lack metadata")
-        parser.add_argument('--configuration', '-c', nargs='?', action="append", dest='configurations', 
+        parser.add_argument('--configuration', '-c', nargs='?', action="append", dest='configurations',
                             help="package a specific build configuration\n(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
@@ -124,7 +125,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
 
     def run(self, args):
         logger.debug("loading " + args.autobuild_filename)
-        platform=common.get_current_platform()
+        platform = common.get_current_platform()
         if args.clean_only:
             logger.info("packaging with --clean-only required")
         if args.check_license:
@@ -146,14 +147,16 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         is_clean = True
         for build_dir in build_dirs:
             package(config, build_dir, platform, archive_filename=args.archive_filename,
-                    archive_format=args.archive_format, clean_only=args.clean_only, results_file=args.results_file, dry_run=args.dry_run)
+                    archive_format=args.archive_format, clean_only=args.clean_only, results_file=args.results_file,
+                    dry_run=args.dry_run)
 
 
 class PackageError(AutobuildError):
     pass
 
 
-def package(config, build_directory, platform_name, archive_filename=None, archive_format=None, clean_only=False, results_file=None, dry_run=False):
+def package(config, build_directory, platform_name, archive_filename=None, archive_format=None, clean_only=False,
+            results_file=None, dry_run=False):
     """
     Create an archive for the given platform.
     Returns True if the archive is not dirty, False if it is
@@ -183,7 +186,7 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
         except configfile.ConfigurationError:
             pass  # We don't have a common platform defined, that is ok.
     if missing:
-        raise PackageError("No files matched manifest specifiers:\n"+'\n'.join(missing))
+        raise PackageError("No files matched manifest specifiers:\n" + '\n'.join(missing))
 
     # add the manifest files to the metadata file (list does not include itself)
     metadata_file_name = configfile.PACKAGE_METADATA_FILE
@@ -198,7 +201,7 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
         else:
             logger.warning("WARNING: package depends on local or legacy installables\n"
                            "  use 'autobuild install --list-dirty' to see problem packages")
-    if not getattr(metadata_file.package_description,'version',None):
+    if not getattr(metadata_file.package_description, 'version', None):
         raise PackageError("no version in metadata package_description -- "
                            "please verify %s version_file and rerun build" %
                            os.path.basename(config.path))
@@ -207,9 +210,10 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
             files.add(package_description.license_file)
     if 'source_directory' in metadata_file.package_description:
         del metadata_file.package_description['source_directory']
-    disallowed_paths=[path for path in files if ".." in path or os.path.isabs(path)]
+    disallowed_paths = [path for path in files if ".." in path or os.path.isabs(path)]
     if disallowed_paths:
-        raise PackageError("Absolute paths or paths with parent directory elements are not allowed:\n  "+"\n  ".join(sorted(disallowed_paths))+"\n")
+        raise PackageError("Absolute paths or paths with parent directory elements are not allowed:\n  " + "\n  ".join(
+            sorted(disallowed_paths)) + "\n")
     metadata_file.manifest = files
     if metadata_file.build_id:
         build_id = metadata_file.build_id
@@ -230,14 +234,14 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     if not dry_run:
         if results_file:
             try:
-                results=open(results_file,'w')
+                results = open(results_file, 'w')
             except IOError as err:
                 raise PackageError("Unable to open results file %s:\n%s" % (results_file, err))
-            
-            results_dict = {"autobuild_package_name":package_description.name,
-                         "autobuild_package_version":getattr(metadata_file.package_description,'version',None),
-                         "autobuild_package_clean":("false" if metadata_file.dirty else "true"),
-                         "autobuild_package_metadata":metadata_file_path}
+
+            results_dict = {"autobuild_package_name": package_description.name,
+                            "autobuild_package_version": getattr(metadata_file.package_description, 'version', None),
+                            "autobuild_package_clean": ("false" if metadata_file.dirty else "true"),
+                            "autobuild_package_metadata": metadata_file_path}
         metadata_file.save()
 
     # add the metadata file name to the list of files _after_ putting that list in the metadata
@@ -268,6 +272,7 @@ def package(config, build_directory, platform_name, archive_filename=None, archi
     if not dry_run and results:
         results.close()
     return not metadata_file.dirty
+
 
 def _determine_archive_format(archive_format_argument, archive_description):
     if archive_format_argument is not None:
@@ -330,10 +335,10 @@ def _create_tarfile(tarfilename, format, build_directory, filelist, results, res
 
             import multiprocessing
             from pyzstd import CParameter
-            zstdoption = {CParameter.compressionLevel : 22,
-                    CParameter.nbWorkers : 4,
-                    CParameter.checksumFlag : 1}
-            
+            zstdoption = {CParameter.compressionLevel: 22,
+                          CParameter.nbWorkers: 4,
+                          CParameter.checksumFlag: 1}
+
             tfile = common.ZstdTarFile(tarfilename, 'w', level_or_option=zstdoption)
         else:
             raise PackageError("unknown tar archive format: %s" % format)
@@ -435,4 +440,3 @@ def _print_hash(filename, results, results_dict):
 
     # Not using logging, since this output should be produced unconditionally on stdout
     # Downstream build tools utilize this output
-

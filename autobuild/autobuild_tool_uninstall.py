@@ -47,6 +47,7 @@ logger = logging.getLogger('autobuild.uninstall')
 class UninstallError(common.AutobuildError):
     pass
 
+
 __help = """\
 This autobuild command uninstalls package files.
 
@@ -89,7 +90,8 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         parser.add_argument('--config-file',
                             default=configfile.AUTOBUILD_CONFIG_FILE,
                             dest='install_filename',
-                            help="The file used to describe what should be installed\n  (defaults to $AUTOBUILD_CONFIG_FILE or \"autobuild.xml\").")
+                            help="The file used to describe what should be installed\n"
+                                 "(defaults to $AUTOBUILD_CONFIG_FILE or \"autobuild.xml\").")
         parser.add_argument('--installed-manifest',
                             default=configfile.INSTALLED_CONFIG_FILE,
                             dest='installed_filename',
@@ -98,7 +100,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
         # --installed-manifest is relative.
         parser.add_argument('--install-dir',
                             default=None,
-                            dest='select_dir',          # see common.select_directories()
+                            dest='select_dir',  # see common.select_directories()
                             help='Where to find the default --installed-manifest file.')
         parser.add_argument('--all', '-a',
                             dest='all',
@@ -109,13 +111,14 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                             nargs='?',
                             action="append",
                             dest='configurations',
-                            help="uninstall packages for a specific build configuration\n(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
+                            help="uninstall packages for a specific build configuration\n"
+                                 "(may be specified as comma separated values in $AUTOBUILD_CONFIGURATION)",
                             metavar='CONFIGURATION',
                             default=self.configurations_from_environment())
 
     def run(self, args):
-        platform=common.get_current_platform()
-        logger.debug("uninstalling for platform "+platform)
+        platform = common.get_current_platform()
+        logger.debug("uninstalling for platform " + platform)
 
         installed_filename = args.installed_filename
         if os.path.isabs(installed_filename):
@@ -132,7 +135,7 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                 logger.error("no applicable configurations found.\n"
                              "did you remember to mark a configuration as default?\n"
                              "autobuild cowardly refuses to do nothing!")
-                
+
             for build_configuration in build_configurations:
                 # Get enriched environment based on the current configuration
                 environment = get_enriched_environment(build_configuration.name)
@@ -146,17 +149,18 @@ class AutobuildTool(autobuild_base.AutobuildBase):
                 build_directory = bconfig.get_build_directory(build_configuration, platform_name=platform)
                 logger.debug("build directory: %s" % build_directory)
                 installed_filenames = \
-                  [os.path.realpath(os.path.join(install_dir, installed_filename))
-                   for install_dir in
-                   common.select_directories(args, config,
-                                            "install", "uninstalling",
-                                            lambda cnf:
-                                            os.path.join(build_directory,
-                                                         "packages"))]
+                    [os.path.realpath(os.path.join(install_dir, installed_filename))
+                     for install_dir in
+                     common.select_directories(args, config,
+                                               "install", "uninstalling",
+                                               lambda cnf:
+                                               os.path.join(build_directory,
+                                                            "packages"))]
 
         logger.debug("installed filenames: %s" % installed_filenames)
         for installed_filename in installed_filenames:
             uninstall_packages(args, installed_filename, args.package, args.dry_run)
+
 
 if __name__ == '__main__':
     sys.exit("Please invoke this script using 'autobuild %s'" %

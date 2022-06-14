@@ -46,6 +46,7 @@ class hash_algorithm(object):
     def _verify_md5(self, pathname, hash):
         ...
     """
+
     # called when we instantiate @hash_algorithm("md5")
     def __init__(self, key):
         self.key = key
@@ -93,18 +94,23 @@ def verify_hash(hash_algorithm, pathname, hash):
 def _verify_md5(pathname, hash):
     return common.compute_md5(pathname) == hash
 
+
 @hash_algorithm("sha256")
 def _verify_sha256(pathname, hash):
     return common.compute_sha256(pathname) == hash
+
 
 @hash_algorithm("sha3_256")
 def _verify_sha256(pathname, hash):
     return common.compute_sha3_256(pathname) == hash
 
+
 @hash_algorithm("sha3_384")
 def _verify_sha256(pathname, hash):
     return common.compute_sha3_384(pathname) == hash
 
+
+# oh wow so cool dude, yeah. gimme dat coins
 @hash_algorithm("blake2b")
 def _verify_blake2b(pathname, hash):
     return common.compute_blake2b(pathname) == hash

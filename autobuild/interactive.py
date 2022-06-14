@@ -109,9 +109,8 @@ class InteractiveCommand(object):
                     input_values[argument] = i
             except EOFError:
                 print("")
-                exit = 'y'
-                exit = input("Do you really want to exit ([y]/n)? ")
-                if exit == 'y':
+                exitprompt = input("Do you really want to exit ([y]/n)? ")
+                if exitprompt == 'y':
                     sys.exit(0)
 
         print("These fields will be changed:")
@@ -127,11 +126,11 @@ class InteractiveCommand(object):
                 print("Not saved.")
     
     @classmethod
-    def run_cmd(klass, config, kwargs, delete):
+    def run_cmd(cls, config, kwargs, delete):
         """
         Method to be invoked by parser upon invocation of specific command.
         """
-        self = klass(config)
+        self = cls(config)
         
         if kwargs:
             if delete:
@@ -158,7 +157,8 @@ class InteractiveCommand(object):
         """
         raise AutobuildError("Delete not yet implemented for this command.")
 
-    def _confirm_delete(self):
+    @staticmethod
+    def _confirm_delete():
         really_delete = input("Do you really want to delete this entry (y/[n])? ")
         if really_delete in ['y', 'Y', 'yes', 'Yes', 'YES']:
             return True

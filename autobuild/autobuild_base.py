@@ -30,7 +30,8 @@ import argparse
 # Main tool functionality
 class AutobuildBase:
 
-    def name_from_file(self, filename):
+    @staticmethod
+    def name_from_file(filename):
         """
         Since an autobuild tool's module filename must conform to a particular
         naming convention, and that name must embed the tool's invocation
@@ -42,7 +43,8 @@ class AutobuildBase:
             basename = basename[len(pfx):]
         return basename
 
-    def configurations_from_environment(self):
+    @staticmethod
+    def configurations_from_environment():
         cfgs = os.environ.get("AUTOBUILD_CONFIGURATION")
         if cfgs is None:
             return []
